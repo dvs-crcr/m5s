@@ -1,7 +1,14 @@
 package main
 
-import "fmt"
+import (
+    "m5s/internal/interfaces/rest"
+)
 
 func main() {
-    fmt.Println("server")
+    port := 8080
+    host := "localhost"
+
+    ms := rest.NewMetricsServer(host, port)
+
+    ms.Start()
 }
