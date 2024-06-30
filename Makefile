@@ -27,6 +27,10 @@ metrics-test-3: build
                 -agent-binary-path=cmd/agent/agent \
                 -binary-path=cmd/server/server
 
-test: static-test metrics-test-1
+autotest: static-test metrics-test-1
+
+test:
+	go test -count=1 ./...
+
 
 .PHONY: all
