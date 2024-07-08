@@ -1,14 +1,19 @@
 package main
 
 import (
-    "m5s/internal/interfaces/rest"
+    "fmt"
+    "log"
+    "net/http"
+
+    "m5s/internal/api"
 )
 
 func main() {
     port := 8080
     host := "localhost"
 
-    ms := rest.NewMetricsServer(host, port)
-
-    ms.Start()
+    apiHandler := api.NewHandler()
+    log.Fatal(
+        http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), apiHandler),
+    )
 }

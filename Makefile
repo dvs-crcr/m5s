@@ -27,6 +27,27 @@ metrics-test-3: build
                 -agent-binary-path=cmd/agent/agent \
                 -binary-path=cmd/server/server
 
+metrics-test-4: build
+	SERVER_PORT=$(random unused-port)
+	ADDRESS="localhost:${SERVER_PORT}"
+	TEMP_FILE=$(random tempfile)
+	metricstest -test.v -test.run=^TestIteration4$ \
+		-agent-binary-path=cmd/agent/agent \
+		-binary-path=cmd/server/server \
+		-server-port=$SERVER_PORT \
+		-source-path=.
+
+metrics-test-5: build
+	SERVER_PORT=$(random unused-port)
+	ADDRESS="localhost:${SERVER_PORT}"
+	TEMP_FILE=$(random tempfile)
+	metricstest -test.v -test.run=^TestIteration5$ \
+		-agent-binary-path=cmd/agent/agent \
+		-binary-path=cmd/server/server \
+		-server-port=$SERVER_PORT \
+		-source-path=.
+
+
 autotest: static-test metrics-test-1
 
 test:
