@@ -48,7 +48,7 @@ metrics-test-5: build
 		-source-path=.
 
 
-autotest: static-test metrics-test-1
+autotest-sprint-1: static-test metrics-test-1 metrics-test-2 metrics-test-3 metrics-test-4 metrics-test-5
 
 test:
 	go test -count=1 ./...
