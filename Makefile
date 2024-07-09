@@ -1,3 +1,4 @@
+# Common targets
 all: build
 
 build:
@@ -6,8 +7,25 @@ build:
 	go build -o cmd/agent/agent cmd/agent/*.go
 
 run-server:
-	go run ./cmd/server/.
+	go run ./cmd/server/*.go
 
+run-agent:
+	go run ./cmd/server/*.go
+
+.PHONY: all build run-server run-agent
+
+# Testing targets
+test:
+	go test -v -count=1 ./...
+
+coverage:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out
+	rm coverage.out
+
+.PHONY: test coverage
+
+# Autotests
 static-test:
 	go vet -vettool=$(which statictest) ./...
 
@@ -28,7 +46,6 @@ metrics-test-3: build
                 -binary-path=cmd/server/server
 
 metrics-test-4: build
-	ADDRESS="localhost:4485"
 	metricstest -test.v -test.run=^TestIteration4$ \
 		-agent-binary-path=cmd/agent/agent \
 		-binary-path=cmd/server/server \
@@ -36,23 +53,12 @@ metrics-test-4: build
 		-source-path=.
 
 metrics-test-5: build
-	ADDRESS="localhost:4485"
-	TEMP_FILE=$(random tempfile)
 	metricstest -test.v -test.run=^TestIteration5$ \
 		-agent-binary-path=cmd/agent/agent \
 		-binary-path=cmd/server/server \
 		-server-port=4485 \
 		-source-path=.
 
-
 autotest-sprint-1: static-test metrics-test-1 metrics-test-2 metrics-test-3 metrics-test-4 metrics-test-5
 
-test:
-	go test -v -count=1 ./...
-
-coverage:
-	go test -coverprofile=coverage.out ./...
-	go tool cover -html=coverage.out
-	rm coverage.out
-
-.PHONY: all
+.PHONY: static-test metrics-test-1 metrics-test-2 metrics-test-3 metrics-test-4 metrics-test-5 autotest-sprint-1
