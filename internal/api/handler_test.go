@@ -10,7 +10,7 @@ import (
     "github.com/stretchr/testify/require"
 
     "m5s/internal/repository"
-    "m5s/server"
+    "m5s/internal/server"
 )
 
 //nolint:funlen

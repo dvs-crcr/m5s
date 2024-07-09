@@ -2,13 +2,12 @@ package api
 
 import (
     "errors"
-    "log"
     "net/http"
     "strings"
 
     "m5s/domain"
     "m5s/internal/repository"
-    "m5s/server"
+    "m5s/internal/server"
 )
 
 type Handler struct {
@@ -80,7 +79,7 @@ func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
     metricValue, err := h.serverService.GetMetric(segments[2], segments[3])
     if err != nil {
         if errors.Is(err, domain.ErrInvalidMetricType) {
-            log.Printf("%v", domain.ErrWrongMetricType)
+            w.WriteHeader(http.StatusBadRequest)
 
             return
         } else if errors.Is(err, domain.ErrInvalidMetricName) {
@@ -89,10 +88,6 @@ func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
             return
         } else if errors.Is(err, domain.ErrNoSuchMetric) {
             w.WriteHeader(http.StatusNotFound)
-
-            return
-        } else if errors.Is(err, domain.ErrWrongMetricType) {
-            w.WriteHeader(http.StatusBadRequest)
 
             return
         }
