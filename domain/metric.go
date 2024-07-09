@@ -12,6 +12,8 @@ var (
     ErrInvalidMetricType  = errors.New("invalid metric type")
     ErrInvalidMetricName  = errors.New("invalid metric name")
     ErrInvalidMetricValue = errors.New("invalid metric value")
+    ErrNoSuchMetric       = errors.New("no such metric")
+    ErrWrongMetricType    = errors.New("wrong metric type")
 )
 
 const (

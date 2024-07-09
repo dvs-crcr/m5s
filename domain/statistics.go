@@ -3,9 +3,11 @@ package domain
 import (
     "math/rand"
     "runtime"
+    "sync"
 )
 
 type Statistics struct {
+    sync.RWMutex
     mStat         runtime.MemStats
     CurrentValues map[string]float64
     PollCount     int64
@@ -18,6 +20,9 @@ func NewStatistics() *Statistics {
 }
 
 func (s *Statistics) Refresh() {
+    s.RLock()
+    defer s.RUnlock()
+
     runtime.ReadMemStats(&s.mStat)
 
     s.CurrentValues["Alloc"] = float64(s.mStat.Alloc)

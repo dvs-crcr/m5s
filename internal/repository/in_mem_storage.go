@@ -26,7 +26,27 @@ func (ims *InMemStorage) Update(metric *domain.Metric) error {
     return nil
 }
 
-func (ims *InMemStorage) GetAll() []*domain.Metric {
+func (ims *InMemStorage) GetMetric(
+    metricType domain.MetricType,
+    name string,
+) (*domain.Metric, error) {
+    if name == "" {
+        return nil, domain.ErrInvalidMetricName
+    }
+
+    metric, ok := ims.store[name]
+    if !ok {
+        return nil, domain.ErrNoSuchMetric
+    }
+
+    if metric.Type != metricType {
+        return nil, domain.ErrWrongMetricType
+    }
+
+    return metric, nil
+}
+
+func (ims *InMemStorage) GetMetricsList() []*domain.Metric {
     metrics := make([]*domain.Metric, len(ims.store))
 
     i := 0

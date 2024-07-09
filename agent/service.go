@@ -12,7 +12,7 @@ import (
 
 type AgentRepo interface {
     Update(metric *domain.Metric) error
-    GetAll() []*domain.Metric
+    GetMetricsList() []*domain.Metric
 }
 
 type AgentService struct {
@@ -40,6 +40,8 @@ func NewAgentService(
 }
 
 func (as *AgentService) StartPoller() {
+    log.Printf("Start poller with %d duration", as.pollInterval)
+
     ticker := time.NewTicker(as.pollInterval)
 
     for range ticker.C {
@@ -60,10 +62,12 @@ func (as *AgentService) StartPoller() {
 }
 
 func (as *AgentService) StartReporter() {
+    log.Printf("Start reporter with %d duration", as.reportInterval)
+
     ticker := time.NewTicker(as.reportInterval)
 
     for range ticker.C {
-        for _, metric := range as.repo.GetAll() {
+        for _, metric := range as.repo.GetMetricsList() {
             if err := as.makeRequest(metric); err != nil {
                 log.Fatalf("%v", err)
             }

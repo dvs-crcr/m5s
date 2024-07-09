@@ -2,6 +2,7 @@ package api
 
 import (
     "errors"
+    "log"
     "net/http"
     "strings"
 
@@ -16,16 +17,11 @@ type Handler struct {
 }
 
 func NewHandler() *Handler {
-    handler := &Handler{
+    return &Handler{
         serverService: server.NewServerService(
             repository.NewInMemStorage(),
         ),
-        Mux: http.NewServeMux(),
     }
-
-    handler.Mux.HandleFunc("/update/", handler.Update)
-
-    return handler
 }
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
@@ -62,4 +58,55 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
     }
 
     w.WriteHeader(http.StatusOK)
+}
+
+func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "text/plain")
+
+    if r.Method != http.MethodGet {
+        w.WriteHeader(http.StatusMethodNotAllowed)
+
+        return
+    }
+
+    segments := strings.Split(r.URL.Path, "/")
+
+    if len(segments) < 4 {
+        w.WriteHeader(http.StatusNotFound)
+
+        return
+    }
+
+    metricValue, err := h.serverService.GetMetric(segments[2], segments[3])
+    if err != nil {
+        if errors.Is(err, domain.ErrInvalidMetricType) {
+            log.Printf("%v", domain.ErrWrongMetricType)
+
+            return
+        } else if errors.Is(err, domain.ErrInvalidMetricName) {
+            w.WriteHeader(http.StatusNotFound)
+
+            return
+        } else if errors.Is(err, domain.ErrNoSuchMetric) {
+            w.WriteHeader(http.StatusNotFound)
+
+            return
+        } else if errors.Is(err, domain.ErrWrongMetricType) {
+            w.WriteHeader(http.StatusBadRequest)
+
+            return
+        }
+    }
+
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte(metricValue))
+}
+
+func (h *Handler) GetMetricsList(w http.ResponseWriter, _ *http.Request) {
+    w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+
+    metricsList := h.serverService.GetMetricsList()
+
+    w.WriteHeader(http.StatusOK)
+    w.Write([]byte(metricsList))
 }
