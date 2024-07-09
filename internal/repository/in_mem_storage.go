@@ -39,6 +39,9 @@ func (ims *InMemStorage) GetMetric(
     metricType domain.MetricType,
     name string,
 ) (*domain.Metric, error) {
+    ims.RLock()
+    defer ims.RUnlock()
+
     if name == "" {
         return nil, domain.ErrInvalidMetricName
     }
@@ -56,6 +59,9 @@ func (ims *InMemStorage) GetMetric(
 }
 
 func (ims *InMemStorage) GetMetricsList() []*domain.Metric {
+    ims.RLock()
+    defer ims.RUnlock()
+
     metrics := make([]*domain.Metric, len(ims.store))
 
     i := 0
