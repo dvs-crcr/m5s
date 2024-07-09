@@ -2,6 +2,7 @@ package main
 
 import (
     "log"
+    "net/url"
     "os"
     "os/signal"
     "syscall"
@@ -19,6 +20,10 @@ func main() {
 }
 
 func execute() error {
+    if _, err := url.Parse(flagRunAddr); err != nil {
+        return err
+    }
+
     as := agent.NewAgentService(
         time.Duration(flagRunPollInterval)*time.Second,
         time.Duration(flagRunReportInterval)*time.Second,

@@ -21,7 +21,16 @@ func (ims *InMemStorage) Update(metric *domain.Metric) error {
     ims.RLock()
     defer ims.RUnlock()
 
-    ims.store[metric.Name] = metric
+    switch metric.Type {
+    case domain.MetricTypeGauge:
+        ims.store[metric.Name] = metric
+    case domain.MetricTypeCounter:
+        prevMetric, ok := ims.store[metric.Name]
+        if ok {
+            metric.IntValue += prevMetric.IntValue
+        }
+        ims.store[metric.Name] = metric
+    }
 
     return nil
 }

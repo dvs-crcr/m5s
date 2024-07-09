@@ -3,6 +3,7 @@ package main
 import (
     "log"
     "net/http"
+    "net/url"
 
     "github.com/go-chi/chi/v5"
 
@@ -25,6 +26,10 @@ func execute() error {
     r.Get("/", apiHandler.GetMetricsList)
     r.Post("/update/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
     r.Get("/value/{metricType}/{metricName}", apiHandler.GetMetric)
+
+    if _, err := url.Parse(flagRunAddr); err != nil {
+        return err
+    }
 
     log.Printf("Running server on %s", flagRunAddr)
     return http.ListenAndServe(flagRunAddr, r)

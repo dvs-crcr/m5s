@@ -10,7 +10,6 @@ type Statistics struct {
     sync.RWMutex
     mStat         runtime.MemStats
     CurrentValues map[string]float64
-    PollCount     int64
 }
 
 func NewStatistics() *Statistics {
@@ -25,6 +24,7 @@ func (s *Statistics) Refresh() {
 
     runtime.ReadMemStats(&s.mStat)
 
+    // TODO: rework this sh**
     s.CurrentValues["Alloc"] = float64(s.mStat.Alloc)
     s.CurrentValues["BuckHashSys"] = float64(s.mStat.BuckHashSys)
     s.CurrentValues["Frees"] = float64(s.mStat.Frees)
@@ -54,6 +54,4 @@ func (s *Statistics) Refresh() {
     s.CurrentValues["TotalAlloc"] = float64(s.mStat.TotalAlloc)
     s.CurrentValues["TotalAlloc"] = float64(s.mStat.TotalAlloc)
     s.CurrentValues["RandomValue"] = rand.Float64()
-
-    s.PollCount++
 }

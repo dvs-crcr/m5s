@@ -54,7 +54,7 @@ func (as *AgentService) StartPoller() {
             }
         }
 
-        pollCountMetric := domain.NewCounter("PollCount", as.stat.PollCount)
+        pollCountMetric := domain.NewCounter("PollCount", 1)
         if err := as.repo.Update(pollCountMetric); err != nil {
             log.Fatalf("%v", err)
         }
