@@ -3,6 +3,7 @@ package main
 import (
     "flag"
     "os"
+    "strconv"
 )
 
 type Config struct {
@@ -22,46 +23,25 @@ func NewDefaultConfig() *Config {
 // env -> arg -> default
 
 func (c *Config) parseVariables() {
-    c.parseAddress()
-    c.parseReportInterval()
-    c.parsePollInterval()
-}
-
-func (c *Config) parseAddress() {
-    // ADDRESS
-    if addrEnv := os.Getenv("ADDRESS"); addrEnv != "" {
-        return
-    }
-
     flag.StringVar(
         &c.Addr, "a", c.Addr, "server endpoint address",
     )
-
-    flag.Parse()
-}
-
-func (c *Config) parseReportInterval() {
-    // REPORT_INTERVAL
-    if addrEnv := os.Getenv("REPORT_INTERVAL"); addrEnv != "" {
-        return
-    }
-
     flag.Int64Var(
         &c.ReportInterval, "r", c.ReportInterval, "report interval (sec)",
     )
-
-    flag.Parse()
-}
-
-func (c *Config) parsePollInterval() {
-    // POLL_INTERVAL
-    if addrEnv := os.Getenv("POLL_INTERVAL"); addrEnv != "" {
-        return
-    }
-
     flag.Int64Var(
         &c.PollInterval, "p", c.PollInterval, "poll interval (sec)",
     )
 
     flag.Parse()
+
+    if addrEnv := os.Getenv("ADDRESS"); addrEnv != "" {
+        c.Addr = addrEnv
+    }
+    if reportEnv := os.Getenv("REPORT_INTERVAL"); reportEnv != "" {
+        c.ReportInterval, _ = strconv.ParseInt(reportEnv, 10, 64)
+    }
+    if pollEnv := os.Getenv("POLL_INTERVAL"); pollEnv != "" {
+        c.PollInterval, _ = strconv.ParseInt(pollEnv, 10, 64)
+    }
 }

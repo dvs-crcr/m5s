@@ -1,6 +1,7 @@
 package main
 
 import (
+    "fmt"
     "log"
     "os"
     "os/signal"
@@ -20,6 +21,7 @@ func main() {
 }
 
 func execute(cfg *Config) error {
+    fmt.Printf("%+v\n", cfg)
     as := agent.NewAgentService(
         time.Duration(cfg.PollInterval)*time.Second,
         time.Duration(cfg.ReportInterval)*time.Second,

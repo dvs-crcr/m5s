@@ -1,6 +1,7 @@
 package main
 
 import (
+    "fmt"
     "log"
     "net/http"
 
@@ -19,6 +20,8 @@ func main() {
 }
 
 func execute(cfg *Config) error {
+    fmt.Printf("%+v\n", cfg)
+
     apiHandler := api.NewHandler()
 
     r := chi.NewRouter()
