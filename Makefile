@@ -48,7 +48,11 @@ metrics-test-5: build
 autotest-sprint-1: static-test metrics-test-1 metrics-test-2 metrics-test-3 metrics-test-4 metrics-test-5
 
 test:
-	go test -count=1 ./...
+	go test -v -count=1 ./...
 
+coverage:
+	go test -coverprofile=coverage.out ./...
+	go tool cover -html=coverage.out
+	rm coverage.out
 
 .PHONY: all
