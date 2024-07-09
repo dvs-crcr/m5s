@@ -1,7 +1,7 @@
 package main
 
 import (
-    "fmt"
+    "log"
     "os"
     "os/signal"
     "syscall"
@@ -11,13 +11,18 @@ import (
 )
 
 func main() {
-    pollInterval := 2 * time.Second
-    reportInterval := 10 * time.Second
-    port := 8080
-    host := "localhost"
+    parseFlags()
 
+    if err := execute(); err != nil {
+        log.Fatal(err)
+    }
+}
+
+func execute() error {
     as := agent.NewAgentService(
-        pollInterval, reportInterval, fmt.Sprintf("%s:%d", host, port),
+        time.Duration(flagRunPollInterval)*time.Second,
+        time.Duration(flagRunReportInterval)*time.Second,
+        flagRunAddr,
     )
 
     go as.StartPoller()
@@ -26,4 +31,6 @@ func main() {
     signalChannel := make(chan os.Signal, 1)
     signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
     <-signalChannel
+
+    return nil
 }

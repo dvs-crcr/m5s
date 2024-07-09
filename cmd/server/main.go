@@ -1,19 +1,31 @@
 package main
 
 import (
-    "fmt"
     "log"
     "net/http"
+
+    "github.com/go-chi/chi/v5"
 
     "m5s/internal/api"
 )
 
 func main() {
-    port := 8080
-    host := "localhost"
+    parseFlags()
 
+    if err := execute(); err != nil {
+        log.Fatal(err)
+    }
+}
+
+func execute() error {
     apiHandler := api.NewHandler()
-    log.Fatal(
-        http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), apiHandler.Mux),
-    )
+
+    r := chi.NewRouter()
+
+    r.Get("/", apiHandler.GetMetricsList)
+    r.Post("/update/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
+    r.Get("/value/{metricType}/{metricName}", apiHandler.GetMetric)
+
+    log.Printf("Running server on %s", flagRunAddr)
+    return http.ListenAndServe(flagRunAddr, r)
 }
