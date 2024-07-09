@@ -13,7 +13,7 @@ type Config struct {
 
 func NewDefaultConfig() *Config {
     return &Config{
-        Addr:           "localhost:80880",
+        Addr:           "localhost:8080",
         PollInterval:   2,
         ReportInterval: 10,
     }
