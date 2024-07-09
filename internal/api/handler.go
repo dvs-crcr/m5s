@@ -12,22 +12,25 @@ import (
 
 type Handler struct {
     serverService *server.ServerService
+    Mux           *http.ServeMux
 }
 
-func NewHandler() *http.ServeMux {
-    repo := repository.NewInMemStorage()
-
+func NewHandler() *Handler {
     handler := &Handler{
-        serverService: server.NewServerService(repo),
+        serverService: server.NewServerService(
+            repository.NewInMemStorage(),
+        ),
+        Mux: http.NewServeMux(),
     }
 
-    mux := http.NewServeMux()
-    mux.HandleFunc("/update/", handler.Update)
+    handler.Mux.HandleFunc("/update/", handler.Update)
 
-    return mux
+    return handler
 }
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+    w.Header().Set("Content-Type", "text/plain")
+
     if r.Method != http.MethodPost {
         w.WriteHeader(http.StatusMethodNotAllowed)
 
@@ -58,6 +61,5 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
         }
     }
 
-    w.Header().Set("Content-Type", "text/plain")
     w.WriteHeader(http.StatusOK)
 }

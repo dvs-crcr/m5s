@@ -14,6 +14,6 @@ func main() {
 
     apiHandler := api.NewHandler()
     log.Fatal(
-        http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), apiHandler),
+        http.ListenAndServe(fmt.Sprintf("%s:%d", host, port), apiHandler.Mux),
     )
 }
