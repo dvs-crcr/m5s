@@ -2,7 +2,6 @@ package main
 
 import (
     "log"
-    "net/url"
     "os"
     "os/signal"
     "syscall"
@@ -12,22 +11,19 @@ import (
 )
 
 func main() {
-    parseFlags()
+    config := NewDefaultConfig()
+    config.parseVariables()
 
-    if err := execute(); err != nil {
+    if err := execute(config); err != nil {
         log.Fatal(err)
     }
 }
 
-func execute() error {
-    if _, err := url.Parse(flagRunAddr); err != nil {
-        return err
-    }
-
+func execute(cfg *Config) error {
     as := agent.NewAgentService(
-        time.Duration(flagRunPollInterval)*time.Second,
-        time.Duration(flagRunReportInterval)*time.Second,
-        flagRunAddr,
+        time.Duration(cfg.PollInterval)*time.Second,
+        time.Duration(cfg.ReportInterval)*time.Second,
+        cfg.Addr,
     )
 
     go as.StartPoller()

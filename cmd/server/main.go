@@ -3,7 +3,6 @@ package main
 import (
     "log"
     "net/http"
-    "net/url"
 
     "github.com/go-chi/chi/v5"
 
@@ -11,14 +10,15 @@ import (
 )
 
 func main() {
-    parseFlags()
+    config := NewDefaultConfig()
+    config.parseVariables()
 
-    if err := execute(); err != nil {
+    if err := execute(config); err != nil {
         log.Fatal(err)
     }
 }
 
-func execute() error {
+func execute(cfg *Config) error {
     apiHandler := api.NewHandler()
 
     r := chi.NewRouter()
@@ -27,10 +27,6 @@ func execute() error {
     r.Post("/update/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
     r.Get("/value/{metricType}/{metricName}", apiHandler.GetMetric)
 
-    if _, err := url.Parse(flagRunAddr); err != nil {
-        return err
-    }
-
-    log.Printf("Running server on %s", flagRunAddr)
-    return http.ListenAndServe(flagRunAddr, r)
+    log.Printf("Running server on %s", cfg.Addr)
+    return http.ListenAndServe(cfg.Addr, r)
 }
