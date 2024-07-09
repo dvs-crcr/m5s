@@ -71,6 +71,7 @@ func (ims *InMemStorage) GetMetricsList() []*domain.Metric {
     metrics := make([]*domain.Metric, len(ims.store))
 
     i := 0
+
     for _, metric := range ims.store {
         metrics[i] = metric
         i++

@@ -67,7 +67,6 @@ linters:
     - makezero
     - mirror
     - misspell
-    - mnd
     - musttag
     - nakedret
     - nestif
@@ -105,7 +104,6 @@ linters:
     - unparam
     - unused
     - usestdlibvars
-    - varnamelen
     - wastedassign
     - whitespace
     - wrapcheck

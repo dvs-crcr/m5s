@@ -13,6 +13,7 @@ import (
     "m5s/server"
 )
 
+//nolint:funlen
 func TestHandler_Update(t *testing.T) {
     handler := &Handler{
         serverService: server.NewServerService(
@@ -103,7 +104,6 @@ func TestHandler_Update(t *testing.T) {
 
             // Check Content-Type
             assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
-
         })
     }
 }

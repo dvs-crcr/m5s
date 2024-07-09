@@ -23,7 +23,10 @@ coverage:
 	go tool cover -html=coverage.out
 	rm coverage.out
 
-.PHONY: test coverage
+lint:
+	golangci-lint run ./...
+
+.PHONY: test coverage lint
 
 # Autotests
 static-test:

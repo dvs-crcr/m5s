@@ -1,32 +1,32 @@
 package main
 
 import (
-    "log"
-    "net/http"
+	"log"
+	"net/http"
 
-    "github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5"
 
-    "m5s/internal/api"
+	"m5s/internal/api"
 )
 
 func main() {
-    config := NewDefaultConfig()
-    config.parseVariables()
+	config := NewDefaultConfig()
+	config.parseVariables()
 
-    if err := execute(config); err != nil {
-        log.Fatal(err)
-    }
+	if err := execute(config); err != nil {
+		log.Fatal(err)
+	}
 }
 
 func execute(cfg *Config) error {
-    apiHandler := api.NewHandler()
+	apiHandler := api.NewHandler()
 
-    r := chi.NewRouter()
+	r := chi.NewRouter()
 
-    r.Get("/", apiHandler.GetMetricsList)
-    r.Post("/update/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
-    r.Get("/value/{metricType}/{metricName}", apiHandler.GetMetric)
+	r.Get("/", apiHandler.GetMetricsList)
+	r.Post("/update/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
+	r.Get("/value/{metricType}/{metricName}", apiHandler.GetMetric)
 
-    log.Printf("Running server on %s", cfg.Addr)
-    return http.ListenAndServe(cfg.Addr, r)
+	log.Printf("Running server on %s", cfg.Addr)
+	return http.ListenAndServe(cfg.Addr, r)
 }

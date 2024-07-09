@@ -6,23 +6,23 @@ import (
     "m5s/domain"
 )
 
-type ServerRepo interface {
+type Repo interface {
     Update(metric *domain.Metric) error
     GetMetric(metricType domain.MetricType, name string) (*domain.Metric, error)
     GetMetricsList() []*domain.Metric
 }
 
-type ServerService struct {
-    repo ServerRepo
+type Service struct {
+    repo Repo
 }
 
-func NewServerService(repo ServerRepo) *ServerService {
-    return &ServerService{
+func NewServerService(repo Repo) *Service {
+    return &Service{
         repo: repo,
     }
 }
 
-func (ss *ServerService) Update(
+func (ss *Service) Update(
     metricType string,
     name string,
     value string,
@@ -35,7 +35,7 @@ func (ss *ServerService) Update(
     return ss.repo.Update(metric)
 }
 
-func (ss *ServerService) GetMetric(
+func (ss *Service) GetMetric(
     metricType string,
     name string,
 ) (string, error) {
@@ -59,7 +59,7 @@ func (ss *ServerService) GetMetric(
     return "", domain.ErrInvalidMetricType
 }
 
-func (ss *ServerService) GetMetricsList() string {
+func (ss *Service) GetMetricsList() string {
     buffer := ""
 
     metricsList := ss.repo.GetMetricsList()

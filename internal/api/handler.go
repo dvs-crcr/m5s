@@ -12,7 +12,7 @@ import (
 )
 
 type Handler struct {
-    serverService *server.ServerService
+    serverService *server.Service
     Mux           *http.ServeMux
 }
 
