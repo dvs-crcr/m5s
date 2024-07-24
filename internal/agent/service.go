@@ -85,7 +85,7 @@ func (as *Service) makeRequest(metric *domain.Metric) error {
 		nil,
 	)
 	if err != nil {
-		return err
+		return fmt.Errorf("execute http request: %v", err)
 	}
 
 	request.Header.Set("Content-Type", "text/plain")
