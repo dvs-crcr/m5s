@@ -36,7 +36,7 @@ func TestHandler_Update(t *testing.T) {
         want   want
     }{
         {
-            name:   "negative - wrong method",
+            name:   "negative__wrong_method",
             method: http.MethodGet,
             target: "/update/gauge/heapSize/0.1111",
             want: want{
@@ -44,7 +44,7 @@ func TestHandler_Update(t *testing.T) {
                 contentType: "text/plain",
             },
         }, {
-            name:   "negative - wrong url",
+            name:   "negative__wrong_url",
             method: http.MethodPost,
             target: "/update/gauge/0.1111",
             want: want{
@@ -52,7 +52,7 @@ func TestHandler_Update(t *testing.T) {
                 contentType: "text/plain",
             },
         }, {
-            name:   "negative - invalid metric type",
+            name:   "negative__invalid_metric_type",
             method: http.MethodPost,
             target: "/update/counter/someMetric/0.1111",
             want: want{
@@ -60,7 +60,7 @@ func TestHandler_Update(t *testing.T) {
                 contentType: "text/plain",
             },
         }, {
-            name:   "negative - invalid metric name",
+            name:   "negative__invalid_metric_name",
             method: http.MethodPost,
             target: "/update/gauge//0.1111",
             want: want{
@@ -68,7 +68,7 @@ func TestHandler_Update(t *testing.T) {
                 contentType: "text/plain",
             },
         }, {
-            name:   "negative - invalid metric value",
+            name:   "negative__invalid_metric_value",
             method: http.MethodPost,
             target: "/update/gauge/someMetric/qwerty",
             want: want{
@@ -76,7 +76,7 @@ func TestHandler_Update(t *testing.T) {
                 contentType: "text/plain",
             },
         }, {
-            name:   "positive - 200",
+            name:   "positive__200",
             method: http.MethodPost,
             target: "/update/gauge/someMetric/0.000001",
             want: want{
