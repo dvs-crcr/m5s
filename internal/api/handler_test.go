@@ -1,16 +1,16 @@
 package api
 
 import (
-    "io"
-    "net/http"
-    "net/http/httptest"
-    "testing"
+	"io"
+	"net/http"
+	"net/http/httptest"
+	"testing"
 
-    "github.com/stretchr/testify/assert"
-    "github.com/stretchr/testify/require"
+	"github.com/stretchr/testify/assert"
+	"github.com/stretchr/testify/require"
 
-    "m5s/internal/repository"
-    "m5s/internal/server"
+	"m5s/internal/repository"
+	"m5s/internal/server"
 )
 
 //nolint:funlen
