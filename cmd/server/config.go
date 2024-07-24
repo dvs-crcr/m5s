@@ -26,7 +26,7 @@ func (c *Config) parseVariables() {
 
     flag.Parse()
 
-    if addrEnv := os.Getenv("METRICS_SERVER_ADDRESS"); addrEnv != "" {
+    if addrEnv := os.Getenv("ADDRESS"); addrEnv != "" {
         c.Addr = addrEnv
     }
 }

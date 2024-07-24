@@ -41,11 +41,11 @@ func (c *Config) parseVariables() error {
 
     flag.Parse()
 
-    if addrEnv := os.Getenv("METRICS_AGENT_ADDRESS"); addrEnv != "" {
+    if addrEnv := os.Getenv("ADDRESS"); addrEnv != "" {
         c.Addr = addrEnv
     }
 
-    if reportEnv := os.Getenv("METRICS_AGENT_REPORT_INTERVAL"); reportEnv != "" {
+    if reportEnv := os.Getenv("REPORT_INTERVAL"); reportEnv != "" {
         if c.ReportInterval, err = strconv.ParseInt(
             reportEnv,
             10,
@@ -55,7 +55,7 @@ func (c *Config) parseVariables() error {
         }
     }
 
-    if pollEnv := os.Getenv("METRICS_AGENT_POLL_INTERVAL"); pollEnv != "" {
+    if pollEnv := os.Getenv("POLL_INTERVAL"); pollEnv != "" {
         if c.PollInterval, err = strconv.ParseInt(
             pollEnv,
             10,
