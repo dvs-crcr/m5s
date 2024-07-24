@@ -23,23 +23,16 @@ func NewHandler() *Handler {
     }
 }
 
-func checkDefaultErrors(err error, w http.ResponseWriter) {
-    if errors.Is(err, domain.ErrInvalidMetricType) {
+func handleErrors(err error, w http.ResponseWriter) {
+    switch {
+    case errors.Is(err, domain.ErrInvalidMetricType):
         w.WriteHeader(http.StatusBadRequest)
-
-        return
-    } else if errors.Is(err, domain.ErrInvalidMetricName) {
+    case errors.Is(err, domain.ErrInvalidMetricName):
         w.WriteHeader(http.StatusNotFound)
-
-        return
-    } else if errors.Is(err, domain.ErrInvalidMetricValue) {
+    case errors.Is(err, domain.ErrInvalidMetricValue):
         w.WriteHeader(http.StatusBadRequest)
-
-        return
-    } else if errors.Is(err, domain.ErrNoSuchMetric) {
+    case errors.Is(err, domain.ErrNoSuchMetric):
         w.WriteHeader(http.StatusNotFound)
-
-        return
     }
 }
 
@@ -61,7 +54,9 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
     }
 
     if err := h.serverService.Update(segments[2], segments[3], segments[4]); err != nil {
-        checkDefaultErrors(err, w)
+        handleErrors(err, w)
+
+        return
     }
 
     w.WriteHeader(http.StatusOK)
@@ -86,7 +81,9 @@ func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
 
     metricValue, err := h.serverService.GetMetric(segments[2], segments[3])
     if err != nil {
-        checkDefaultErrors(err, w)
+        handleErrors(err, w)
+
+        return
     }
 
     w.WriteHeader(http.StatusOK)
