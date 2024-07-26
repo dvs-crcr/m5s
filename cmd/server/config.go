@@ -1,30 +1,43 @@
 package main
 
 import (
-	"flag"
-	"os"
+    "flag"
+    "os"
 )
 
 type Config struct {
-	Addr string
+    LogLevel string
+    Addr     string
 }
 
-var DefaultAddress = "localhost:8080"
+var (
+    DefaultLogLevel = "error"
+    DefaultAddress  = "localhost:8080"
+)
 
 func NewDefaultConfig() *Config {
-	return &Config{
-		Addr: DefaultAddress,
-	}
+    return &Config{
+        LogLevel: DefaultLogLevel,
+        Addr:     DefaultAddress,
+    }
 }
 
 func (c *Config) parseVariables() {
-	flag.StringVar(
-		&c.Addr, "a", c.Addr, "server endpoint address",
-	)
+    flag.StringVar(
+        &c.Addr, "a", c.Addr, "server endpoint address",
+    )
 
-	flag.Parse()
+    flag.StringVar(
+        &c.LogLevel, "l", c.LogLevel, "logging level",
+    )
 
-	if addrEnv := os.Getenv("ADDRESS"); addrEnv != "" {
-		c.Addr = addrEnv
-	}
+    flag.Parse()
+
+    if addrEnv := os.Getenv("ADDRESS"); addrEnv != "" {
+        c.Addr = addrEnv
+    }
+
+    if logLevelEnv := os.Getenv("LOG_LEVEL"); logLevelEnv != "" {
+        c.LogLevel = logLevelEnv
+    }
 }
