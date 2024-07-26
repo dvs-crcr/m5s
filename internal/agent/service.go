@@ -66,7 +66,7 @@ func WithReportInterval(reportInterval time.Duration) Option {
 }
 
 func (as *Service) StartPoller() {
-    as.logger.Info("Start poller", "duration", as.pollInterval)
+    as.logger.Info("Starting poller", "duration", as.pollInterval)
 
     ticker := time.NewTicker(as.pollInterval)
 
@@ -88,7 +88,7 @@ func (as *Service) StartPoller() {
 }
 
 func (as *Service) StartReporter() {
-    as.logger.Info("Start reporter", "duration", as.reportInterval)
+    as.logger.Info("Starting reporter", "duration", as.reportInterval)
 
     ticker := time.NewTicker(as.reportInterval)
 

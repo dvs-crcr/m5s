@@ -6,20 +6,22 @@ import (
     "strings"
 
     "m5s/domain"
+    "m5s/internal/logger"
     "m5s/internal/repository"
     "m5s/internal/server"
 )
 
 type Handler struct {
     serverService *server.Service
-    Mux           *http.ServeMux
+    logger        logger.Logger
 }
 
-func NewHandler() *Handler {
+func NewHandler(loggerInstance logger.Logger) *Handler {
     return &Handler{
         serverService: server.NewServerService(
             repository.NewInMemStorage(),
         ),
+        logger: loggerInstance,
     }
 }
 

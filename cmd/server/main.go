@@ -27,10 +27,11 @@ func execute(cfg *Config) error {
         internalLogger.WithLogLevel(cfg.LogLevel),
     )
 
-    apiHandler := api.NewHandler()
+    apiHandler := api.NewHandler(logger)
 
     r := chi.NewRouter()
 
+    r.Use(apiHandler.WithLogger)
     r.Get("/", apiHandler.GetMetricsList)
     r.Post("/update/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
     r.Get("/value/{metricType}/{metricName}", apiHandler.GetMetric)
