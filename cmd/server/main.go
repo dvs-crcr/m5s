@@ -1,32 +1,43 @@
 package main
 
 import (
-	"log"
-	"net/http"
+    "log"
+    "net/http"
 
-	"github.com/go-chi/chi/v5"
+    "github.com/go-chi/chi/v5"
 
-	"m5s/internal/api"
+    "m5s/internal/api"
+    internalLogger "m5s/internal/logger"
+    "m5s/internal/logger/providers"
 )
 
 func main() {
-	config := NewDefaultConfig()
-	config.parseVariables()
+    config := NewDefaultConfig()
+    config.parseVariables()
 
-	if err := execute(config); err != nil {
-		log.Fatal(err)
-	}
+    if err := execute(config); err != nil {
+        log.Fatal(err)
+    }
 }
 
 func execute(cfg *Config) error {
-	apiHandler := api.NewHandler()
+    loggerProvider := providers.NewZapProvider()
+    logger := internalLogger.NewLogger(
+        internalLogger.WithProvider(loggerProvider),
+        internalLogger.WithLogLevel(cfg.LogLevel),
+    )
 
-	r := chi.NewRouter()
+    apiHandler := api.NewHandler()
 
-	r.Get("/", apiHandler.GetMetricsList)
-	r.Post("/update/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
-	r.Get("/value/{metricType}/{metricName}", apiHandler.GetMetric)
+    r := chi.NewRouter()
 
-	log.Printf("Running server on %s", cfg.Addr)
-	return http.ListenAndServe(cfg.Addr, r)
+    r.Get("/", apiHandler.GetMetricsList)
+    r.Post("/update/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
+    r.Get("/value/{metricType}/{metricName}", apiHandler.GetMetric)
+
+    logger.Info(
+        "Starting server",
+        "addr", cfg.Addr,
+    )
+    return http.ListenAndServe(cfg.Addr, r)
 }

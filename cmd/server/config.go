@@ -11,7 +11,7 @@ type Config struct {
 }
 
 var (
-    DefaultLogLevel = "error"
+    DefaultLogLevel = "info"
     DefaultAddress  = "localhost:8080"
 )
 

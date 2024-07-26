@@ -1,34 +1,49 @@
 package main
 
 import (
-	"log"
-	"m5s/internal/agent"
-	"os"
-	"os/signal"
-	"syscall"
-	"time"
+    "log"
+    "os"
+    "os/signal"
+    "syscall"
+    "time"
+
+    "m5s/internal/agent"
+    internalLogger "m5s/internal/logger"
+    "m5s/internal/logger/providers"
 )
 
 func main() {
-	config := NewDefaultConfig()
-	if err := config.parseVariables(); err != nil {
-		log.Fatal(err)
-	}
+    config := NewDefaultConfig()
+    if err := config.parseVariables(); err != nil {
+        log.Fatal(err)
+    }
 
-	execute(config)
+    execute(config)
 }
 
 func execute(cfg *Config) {
-	agentService := agent.NewAgentService(
-		time.Duration(cfg.PollInterval)*time.Second,
-		time.Duration(cfg.ReportInterval)*time.Second,
-		cfg.Addr,
-	)
+    loggerProvider := providers.NewZapProvider()
+    logger := internalLogger.NewLogger(
+        internalLogger.WithProvider(loggerProvider),
+        internalLogger.WithLogLevel(cfg.LogLevel),
+    )
 
-	go agentService.StartPoller()
-	go agentService.StartReporter()
+    logger.Info(
+        "Starting agent",
+        "addr", cfg.Addr,
+    )
 
-	signalChannel := make(chan os.Signal, 1)
-	signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
-	<-signalChannel
+    agentService := agent.NewAgentService(
+        agent.WithLogger(logger),
+        agent.WithAddress(cfg.Addr),
+        agent.WithPollInterval(time.Duration(cfg.PollInterval)*time.Second),
+        agent.WithReportInterval(time.Duration(cfg.ReportInterval)*time.Second),
+    )
+
+    go agentService.StartPoller()
+    go agentService.StartReporter()
+
+    signalChannel := make(chan os.Signal, 1)
+    signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+    <-signalChannel
 }

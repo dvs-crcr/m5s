@@ -10,7 +10,7 @@ run-server:
 	go run ./cmd/server/*.go -a localhost:44985
 
 run-agent:
-	go run ./cmd/server/*.go -a localhost:44985
+	go run ./cmd/agent/*.go -a localhost:44985
 
 .PHONY: all build run-server run-agent
 
