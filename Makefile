@@ -75,11 +75,11 @@ metrics-test-6: build
 		-source-path=.
 
 metrics-test-7: build
-	export ADDRESS=localhost:4485; \
+	export ADDRESS=localhost:8080; \
 	metricstest -test.v -test.run=^TestIteration7$ \
 		-agent-binary-path=cmd/agent/agent \
 		-binary-path=cmd/server/server \
-		-server-port=4485 \
+		-server-port=8080 \
 		-source-path=.
 
 metrics-test-8: build

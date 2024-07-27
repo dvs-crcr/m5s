@@ -72,13 +72,12 @@ func (h *Handler) WithLogger(handler http.Handler) http.Handler {
         duration := time.Since(start)
 
         h.logger.Info(
-            "Request details",
+            "Request",
             "uri", r.RequestURI,
             "method", r.Method,
             "status", rd.status,
             "duration", duration,
             "size", rd.size,
-            "content-type", r.Header.Get("Content-Type"),
         )
     }
 

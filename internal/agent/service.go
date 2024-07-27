@@ -79,13 +79,13 @@ func (as *Service) StartPoller() {
         for name, value := range as.stat.CurrentValues {
             metric := domain.NewGauge(name, value)
             if err := as.repo.Update(metric); err != nil {
-                as.logger.Fatal("update gauge", "error", err)
+                as.logger.Error("update gauge", "error", err)
             }
         }
 
         pollCountMetric := domain.NewCounter("PollCount", 1)
         if err := as.repo.Update(pollCountMetric); err != nil {
-            as.logger.Fatal("update counter", "error", err)
+            as.logger.Error("update counter", "error", err)
         }
     }
 }
@@ -98,7 +98,7 @@ func (as *Service) StartReporter() {
     for range ticker.C {
         for _, metric := range as.repo.GetMetricsList() {
             if err := as.makeRequest(metric); err != nil {
-                as.logger.Fatal("make reporter request", "error", err)
+                as.logger.Error("make reporter request", "error", err)
             }
         }
     }
@@ -117,18 +117,27 @@ func (as *Service) makeRequest(metric *domain.Metric) error {
         return err
     }
 
-    response, err := http.Post(
-        fmt.Sprintf(
-            "http://%s/update/",
-            as.serverAddr,
-        ),
-        "application/json",
+    var client = &http.Client{
+        Transport: &http.Transport{},
+    }
+
+    request, err := http.NewRequest(
+        http.MethodPost,
+        fmt.Sprintf("http://%s/update/", as.serverAddr),
         bytes.NewBuffer(buf),
     )
     if err != nil {
         return fmt.Errorf("execute http request: %v", err)
     }
 
+    request.Close = true
+
+    request.Header.Set("Content-Type", "application/json")
+
+    response, err := client.Do(request)
+    if err != nil {
+        return err
+    }
     defer response.Body.Close()
 
     return nil

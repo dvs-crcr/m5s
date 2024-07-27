@@ -5,6 +5,7 @@ import (
     "net/http"
     "strings"
 
+    "m5s/domain"
     "m5s/internal/models"
 )
 
@@ -67,11 +68,21 @@ func (h *Handler) GetMetricJSON(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    modelMetric := &models.Metrics{
-        ID:    domainMetric.Name,
-        MType: domainMetric.Type.String(),
-        Delta: &domainMetric.IntValue,
-        Value: &domainMetric.FloatValue,
+    modelMetric := &models.Metrics{}
+
+    switch domainMetric.Type {
+    case domain.MetricTypeGauge:
+        modelMetric = &models.Metrics{
+            ID:    domainMetric.Name,
+            MType: domainMetric.Type.String(),
+            Value: &domainMetric.FloatValue,
+        }
+    case domain.MetricTypeCounter:
+        modelMetric = &models.Metrics{
+            ID:    domainMetric.Name,
+            MType: domainMetric.Type.String(),
+            Delta: &domainMetric.IntValue,
+        }
     }
 
     if err := json.NewEncoder(w).Encode(modelMetric); err != nil {

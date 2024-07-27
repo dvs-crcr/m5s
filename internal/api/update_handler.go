@@ -51,7 +51,8 @@ func (h *Handler) UpdateJSON(w http.ResponseWriter, r *http.Request) {
 
     metric := &models.Metrics{}
 
-    if err := json.NewDecoder(r.Body).Decode(&metric); err != nil {
+    dec := json.NewDecoder(r.Body)
+    if err := dec.Decode(&metric); err != nil {
         handleErrors(ErrInvalidJSONStruct, w)
 
         return
