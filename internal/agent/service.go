@@ -1,12 +1,15 @@
 package agent
 
 import (
+    "bytes"
+    "encoding/json"
     "fmt"
     "net/http"
     "time"
 
     "m5s/domain"
     "m5s/internal/logger"
+    "m5s/internal/models"
     "m5s/internal/repository"
 )
 
@@ -102,24 +105,30 @@ func (as *Service) StartReporter() {
 }
 
 func (as *Service) makeRequest(metric *domain.Metric) error {
-    request, err := http.NewRequest(
-        http.MethodPost,
+    modelMetric := &models.Metrics{
+        ID:    metric.Name,
+        MType: metric.Type.String(),
+        Delta: &metric.IntValue,
+        Value: &metric.FloatValue,
+    }
+
+    buf, err := json.Marshal(modelMetric)
+    if err != nil {
+        return err
+    }
+
+    response, err := http.Post(
         fmt.Sprintf(
-            "http://%s/update/%s/%s/%s",
-            as.serverAddr, metric.Type, metric.Name, metric,
+            "http://%s/update/",
+            as.serverAddr,
         ),
-        nil,
+        "application/json",
+        bytes.NewBuffer(buf),
     )
     if err != nil {
         return fmt.Errorf("execute http request: %v", err)
     }
 
-    request.Header.Set("Content-Type", "text/plain")
-
-    response, err := http.DefaultClient.Do(request)
-    if err != nil {
-        return err
-    }
     defer response.Body.Close()
 
     return nil

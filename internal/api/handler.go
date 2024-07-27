@@ -3,7 +3,7 @@ package api
 import (
     "errors"
     "net/http"
-    "strings"
+    "time"
 
     "m5s/domain"
     "m5s/internal/logger"
@@ -16,6 +16,15 @@ type Handler struct {
     logger        logger.Logger
 }
 
+var (
+    ErrInvalidJSONContentType = errors.New(
+        "invalid request Content-Type, \"application/json\" expected",
+    )
+    ErrInvalidJSONStruct    = errors.New("invalid JSON structure")
+    ErrInvalidSegmentsCount = errors.New("invalid segments count")
+    ErrInvalidMethod        = errors.New("invalid method")
+)
+
 func NewHandler(loggerInstance logger.Logger) *Handler {
     return &Handler{
         serverService: server.NewServerService(
@@ -27,6 +36,12 @@ func NewHandler(loggerInstance logger.Logger) *Handler {
 
 func handleErrors(err error, w http.ResponseWriter) {
     switch {
+    case errors.Is(err, ErrInvalidMethod):
+        w.WriteHeader(http.StatusMethodNotAllowed)
+    case errors.Is(err, ErrInvalidSegmentsCount):
+        w.WriteHeader(http.StatusNotFound)
+    case errors.Is(err, ErrInvalidJSONContentType):
+        w.WriteHeader(http.StatusBadRequest)
     case errors.Is(err, domain.ErrInvalidMetricType):
         w.WriteHeader(http.StatusBadRequest)
     case errors.Is(err, domain.ErrInvalidMetricName):
@@ -38,65 +53,34 @@ func handleErrors(err error, w http.ResponseWriter) {
     }
 }
 
-func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "text/plain")
+func (h *Handler) WithLogger(handler http.Handler) http.Handler {
+    logFn := func(w http.ResponseWriter, r *http.Request) {
+        start := time.Now()
 
-    if r.Method != http.MethodPost {
-        w.WriteHeader(http.StatusMethodNotAllowed)
+        rd := &responseData{
+            status: 0,
+            size:   0,
+        }
 
-        return
+        lw := loggingResponseWriter{
+            ResponseWriter: w,
+            responseData:   rd,
+        }
+
+        handler.ServeHTTP(&lw, r)
+
+        duration := time.Since(start)
+
+        h.logger.Info(
+            "Request details",
+            "uri", r.RequestURI,
+            "method", r.Method,
+            "status", rd.status,
+            "duration", duration,
+            "size", rd.size,
+            "content-type", r.Header.Get("Content-Type"),
+        )
     }
 
-    segments := strings.Split(r.URL.Path, "/")
-
-    if len(segments) < 5 {
-        w.WriteHeader(http.StatusNotFound)
-
-        return
-    }
-
-    if err := h.serverService.Update(segments[2], segments[3], segments[4]); err != nil {
-        handleErrors(err, w)
-
-        return
-    }
-
-    w.WriteHeader(http.StatusOK)
-}
-
-func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "text/plain")
-
-    if r.Method != http.MethodGet {
-        w.WriteHeader(http.StatusMethodNotAllowed)
-
-        return
-    }
-
-    segments := strings.Split(r.URL.Path, "/")
-
-    if len(segments) < 4 {
-        w.WriteHeader(http.StatusNotFound)
-
-        return
-    }
-
-    metricValue, err := h.serverService.GetMetric(segments[2], segments[3])
-    if err != nil {
-        handleErrors(err, w)
-
-        return
-    }
-
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(metricValue))
-}
-
-func (h *Handler) GetMetricsList(w http.ResponseWriter, _ *http.Request) {
-    w.Header().Set("Content-Type", "text/html; charset=UTF-8")
-
-    metricsList := h.serverService.GetMetricsList()
-
-    w.WriteHeader(http.StatusOK)
-    w.Write([]byte(metricsList))
+    return http.HandlerFunc(logFn)
 }

@@ -33,6 +33,8 @@ func execute(cfg *Config) error {
 
     r.Use(apiHandler.WithLogger)
     r.Get("/", apiHandler.GetMetricsList)
+    r.Post("/update/", apiHandler.UpdateJSON)
+    r.Post("/value/", apiHandler.GetMetricJSON)
     r.Post("/update/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
     r.Get("/value/{metricType}/{metricName}", apiHandler.GetMetric)
 
