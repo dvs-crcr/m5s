@@ -5,7 +5,7 @@ import (
 
     "go.uber.org/zap"
 
-    "m5s/internal/logger"
+    "m5s/pkg/logger"
 )
 
 type ZapProvider struct {

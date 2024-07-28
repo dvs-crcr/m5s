@@ -5,15 +5,15 @@ import (
     "os"
 )
 
-type Config struct {
-    LogLevel string
-    Addr     string
-}
-
 var (
     DefaultLogLevel = "info"
     DefaultAddress  = "localhost:8080"
 )
+
+type Config struct {
+    LogLevel string
+    Addr     string
+}
 
 func NewDefaultConfig() *Config {
     return &Config{

@@ -1,8 +1,6 @@
 package server
 
 import (
-    "fmt"
-
     "m5s/domain"
 )
 
@@ -70,14 +68,14 @@ func (ss *Service) GetMetricValue(
             return "", err
         }
 
-        return metric.String(), nil
+        return metric.Value(), nil
     case domain.MetricTypeCounter.String():
         metric, err := ss.repo.GetMetric(domain.MetricTypeCounter, name)
         if err != nil {
             return "", err
         }
 
-        return metric.String(), nil
+        return metric.Value(), nil
     }
 
     return "", domain.ErrInvalidMetricType
@@ -88,9 +86,7 @@ func (ss *Service) GetMetricsList() string {
 
     metricsList := ss.repo.GetMetricsList()
     for _, metric := range metricsList {
-        buffer += fmt.Sprintf(
-            "%s(%s)=%s\n", metric.Name, metric.Type, metric,
-        )
+        buffer += metric.String()
     }
 
     return buffer

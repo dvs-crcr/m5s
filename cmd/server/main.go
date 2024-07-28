@@ -6,9 +6,10 @@ import (
 
     "github.com/go-chi/chi/v5"
 
-    "m5s/internal/api"
-    internalLogger "m5s/internal/logger"
-    "m5s/internal/logger/providers"
+    "m5s/internal/api/handlers"
+    "m5s/internal/api/middleware"
+    internalLogger "m5s/pkg/logger"
+    "m5s/pkg/logger/providers"
 )
 
 func main() {
@@ -27,18 +28,23 @@ func execute(cfg *Config) error {
         internalLogger.WithLogLevel(cfg.LogLevel),
     )
 
-    apiHandler := api.NewHandler(logger)
+    apiHandler := handlers.NewHandler(logger)
+    apiMiddleware := middleware.NewMiddleware(logger)
 
     r := chi.NewRouter()
 
-    r.Use(apiHandler.WithLogger)
+    r.Use(apiMiddleware.WithLogger)
+    r.Use(apiMiddleware.WithCompression)
+
     r.Get("/", apiHandler.GetMetricsList)
-    r.Post("/update", apiHandler.UpdateJSON)
-    r.Post("/update/", apiHandler.UpdateJSON)
-    r.Post("/value", apiHandler.GetMetricJSON)
-    r.Post("/value/", apiHandler.GetMetricJSON)
-    r.Post("/update/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
-    r.Get("/value/{metricType}/{metricName}", apiHandler.GetMetric)
+    r.Route("/update", func(r chi.Router) {
+        r.Post("/", apiHandler.UpdateJSON)
+        r.Post("/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
+    })
+    r.Route("/value", func(r chi.Router) {
+        r.Post("/", apiHandler.GetMetricJSON)
+        r.Get("/{metricType}/{metricName}", apiHandler.GetMetric)
+    })
 
     logger.Info(
         "Starting server",

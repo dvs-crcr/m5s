@@ -1,4 +1,4 @@
-package api
+package handlers
 
 import (
     "encoding/json"
@@ -6,6 +6,7 @@ import (
     "strings"
 
     "m5s/domain"
+    "m5s/internal/api"
     "m5s/internal/models"
 )
 
@@ -13,7 +14,7 @@ func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "text/plain")
 
     if r.Method != http.MethodGet {
-        handleErrors(ErrInvalidMethod, w)
+        api.HandleErrors(api.ErrInvalidMethod, w)
 
         return
     }
@@ -21,14 +22,14 @@ func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
     segments := strings.Split(r.URL.Path, "/")
 
     if len(segments) < 4 {
-        handleErrors(ErrInvalidSegmentsCount, w)
+        api.HandleErrors(api.ErrInvalidSegmentsCount, w)
 
         return
     }
 
     metricValue, err := h.serverService.GetMetricValue(segments[2], segments[3])
     if err != nil {
-        handleErrors(err, w)
+        api.HandleErrors(err, w)
 
         return
     }
@@ -38,14 +39,17 @@ func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetMetricJSON(w http.ResponseWriter, r *http.Request) {
-    if r.Header.Get("Content-Type") != "application/json" {
-        handleErrors(ErrInvalidJSONContentType, w)
+    if !api.CheckContentType(
+        r.Header.Get("Content-Type"),
+        "application/json",
+    ) {
+        api.HandleErrors(api.ErrInvalidJSONContentType, w)
 
         return
     }
 
     if r.Method != http.MethodPost {
-        handleErrors(ErrInvalidMethod, w)
+        api.HandleErrors(api.ErrInvalidMethod, w)
 
         return
     }
@@ -56,14 +60,14 @@ func (h *Handler) GetMetricJSON(w http.ResponseWriter, r *http.Request) {
 
     dec := json.NewDecoder(r.Body)
     if err := dec.Decode(&metric); err != nil {
-        handleErrors(ErrInvalidJSONStruct, w)
+        api.HandleErrors(api.ErrInvalidJSONStruct, w)
 
         return
     }
 
     domainMetric, err := h.serverService.GetMetric(metric.MType, metric.ID)
     if err != nil {
-        handleErrors(err, w)
+        api.HandleErrors(err, w)
 
         return
     }
@@ -86,7 +90,7 @@ func (h *Handler) GetMetricJSON(w http.ResponseWriter, r *http.Request) {
     }
 
     if err := json.NewEncoder(w).Encode(modelMetric); err != nil {
-        handleErrors(ErrInvalidJSONStruct, w)
+        api.HandleErrors(api.ErrInvalidJSONStruct, w)
 
         return
     }

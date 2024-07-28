@@ -10,8 +10,6 @@ type DefaultProvider struct {
     logLevel      LogLevel
 }
 
-var _ Logger = (*DefaultProvider)(nil)
-
 func NewDefaultProvider() *DefaultProvider {
     dp := &DefaultProvider{
         defaultLogger: &log.Logger{},

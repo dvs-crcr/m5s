@@ -2,11 +2,10 @@ package logger
 
 import (
     "errors"
-    "strings"
 )
 
 var ErrWrongLogLevel = errors.New(
-    "wrong log level (available: fatal, error, warn, info, debug)",
+    "wrong log level (available levels: fatal, error, warn, info, debug)",
 )
 
 type LogLevel int
@@ -24,17 +23,16 @@ func (ll LogLevel) String() string {
 }
 
 func parseLogLevel(strLevel string) (LogLevel, error) {
-    strLevel = strings.ToLower(strLevel)
     switch strLevel {
-    case "fatal":
+    case "fatal", "FATAL":
         return FATAL, nil
-    case "error":
+    case "error", "ERROR":
         return ERROR, nil
-    case "warn":
+    case "warn", "WARN":
         return WARN, nil
-    case "info":
+    case "info", "INFO":
         return INFO, nil
-    case "debug":
+    case "debug", "DEBUG":
         return DEBUG, nil
     default:
         return WARN, ErrWrongLogLevel

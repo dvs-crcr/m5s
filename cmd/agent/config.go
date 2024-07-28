@@ -6,19 +6,19 @@ import (
     "strconv"
 )
 
-type Config struct {
-    LogLevel       string
-    Addr           string
-    PollInterval   int64
-    ReportInterval int64
-}
-
 var (
     DefaultLogLevel             = "info"
     DefaultAddress              = "localhost:8080"
     DefaultPollInterval   int64 = 2
     DefaultReportInterval int64 = 10
 )
+
+type Config struct {
+    LogLevel       string
+    Addr           string
+    PollInterval   int64
+    ReportInterval int64
+}
 
 func NewDefaultConfig() *Config {
     return &Config{

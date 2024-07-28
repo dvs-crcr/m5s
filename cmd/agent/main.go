@@ -8,8 +8,9 @@ import (
     "time"
 
     "m5s/internal/agent"
-    internalLogger "m5s/internal/logger"
-    "m5s/internal/logger/providers"
+
+    internalLogger "m5s/pkg/logger"
+    "m5s/pkg/logger/providers"
 )
 
 func main() {
@@ -43,6 +44,7 @@ func execute(cfg *Config) {
     go agentService.StartPoller()
     go agentService.StartReporter()
 
+    // TODO: add "gracefully shutdown"
     signalChannel := make(chan os.Signal, 1)
     signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
     <-signalChannel

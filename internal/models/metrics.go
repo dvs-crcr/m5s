@@ -11,9 +11,9 @@ type Metrics struct {
 
 func (m *Metrics) String() string {
     switch m.MType {
-    case "gauge":
+    case "gauge", "GAUGE":
         return strconv.FormatFloat(*m.Value, 'g', -1, 64)
-    case "counter":
+    case "counter", "COUNTER":
         return strconv.FormatInt(*m.Delta, 10)
     default:
         return ""
