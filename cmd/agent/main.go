@@ -41,8 +41,8 @@ func execute(cfg *Config) {
         agent.WithReportInterval(time.Duration(cfg.ReportInterval)*time.Second),
     )
 
-    go agentService.StartPoller()
-    go agentService.StartReporter()
+    go agentService.StartPollTicker()
+    go agentService.StartReportTicker()
 
     // TODO: add "gracefully shutdown"
     signalChannel := make(chan os.Signal, 1)

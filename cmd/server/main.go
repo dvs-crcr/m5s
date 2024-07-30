@@ -3,18 +3,22 @@ package main
 import (
     "log"
     "net/http"
+    "time"
 
     "github.com/go-chi/chi/v5"
 
     "m5s/internal/api/handlers"
     "m5s/internal/api/middleware"
+    "m5s/internal/server"
     internalLogger "m5s/pkg/logger"
     "m5s/pkg/logger/providers"
 )
 
 func main() {
     config := NewDefaultConfig()
-    config.parseVariables()
+    if err := config.parseVariables(); err != nil {
+        log.Fatal(err)
+    }
 
     if err := execute(config); err != nil {
         log.Fatal(err)
@@ -28,7 +32,19 @@ func execute(cfg *Config) error {
         internalLogger.WithLogLevel(cfg.LogLevel),
     )
 
-    apiHandler := handlers.NewHandler(logger)
+    serverService := server.NewServerService(
+        server.WithLogger(logger),
+        server.WithStoreInterval(time.Duration(cfg.StoreInterval)*time.Second),
+        server.WithFileStoragePath(cfg.FileStoragePath),
+        server.WithRestore(cfg.Restore),
+    )
+
+    serverService.RestoreData()
+
+    apiHandler := handlers.NewHandler(
+        logger,
+        serverService,
+    )
     apiMiddleware := middleware.NewMiddleware(logger)
 
     r := chi.NewRouter()
@@ -45,6 +61,13 @@ func execute(cfg *Config) error {
         r.Post("/", apiHandler.GetMetricJSON)
         r.Get("/{metricType}/{metricName}", apiHandler.GetMetric)
     })
+
+    go serverService.StartStoreTicker()
+
+    // TODO: add "gracefully shutdown"
+    //signalChannel := make(chan os.Signal, 1)
+    //signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
+    //<-signalChannel
 
     logger.Info(
         "Starting server",

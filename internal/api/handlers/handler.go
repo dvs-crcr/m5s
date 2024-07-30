@@ -1,7 +1,6 @@
 package handlers
 
 import (
-    "m5s/internal/repository"
     "m5s/internal/server"
     "m5s/pkg/logger"
 )
@@ -11,11 +10,9 @@ type Handler struct {
     logger        logger.Logger
 }
 
-func NewHandler(loggerInstance logger.Logger) *Handler {
+func NewHandler(loggerInstance logger.Logger, service *server.Service) *Handler {
     return &Handler{
-        serverService: server.NewServerService(
-            repository.NewInMemStorage(),
-        ),
-        logger: loggerInstance,
+        serverService: service,
+        logger:        loggerInstance,
     }
 }
