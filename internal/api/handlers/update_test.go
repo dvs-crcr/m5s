@@ -13,15 +13,12 @@ import (
     "m5s/internal/server"
 )
 
-//nolint:funlen
 func TestHandler_Update(t *testing.T) {
     mux := http.NewServeMux()
 
-    handler := &Handler{
-        serverService: server.NewServerService(
-            repository.NewInMemStorage(),
-        ),
-    }
+    handler := NewHandler(
+        server.NewServerService(repository.NewInMemStorage()),
+    )
 
     mux.HandleFunc("/update/", handler.Update)
 

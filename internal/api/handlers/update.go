@@ -2,6 +2,7 @@ package handlers
 
 import (
     "encoding/json"
+    "io"
     "net/http"
     "strings"
 
@@ -51,12 +52,16 @@ func (h *Handler) UpdateJSON(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    w.Header().Set("Content-Type", "application/json")
-
     metric := &models.Metrics{}
 
-    dec := json.NewDecoder(r.Body)
-    if err := dec.Decode(&metric); err != nil {
+    bodyData, err := io.ReadAll(r.Body)
+    if err != nil {
+        h.logger.Error(err.Error())
+
+        return
+    }
+
+    if err := json.Unmarshal(bodyData, &metric); err != nil {
         api.HandleErrors(api.ErrInvalidJSONStruct, w)
 
         return

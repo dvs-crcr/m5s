@@ -54,8 +54,6 @@ func (h *Handler) GetMetricJSON(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    w.Header().Set("Content-Type", "application/json")
-
     metric := &models.Metrics{}
 
     dec := json.NewDecoder(r.Body)
@@ -88,6 +86,9 @@ func (h *Handler) GetMetricJSON(w http.ResponseWriter, r *http.Request) {
             Delta: &domainMetric.IntValue,
         }
     }
+
+    w.Header().Set("Content-Type", "application/json")
+    w.WriteHeader(http.StatusOK)
 
     if err := json.NewEncoder(w).Encode(modelMetric); err != nil {
         api.HandleErrors(api.ErrInvalidJSONStruct, w)

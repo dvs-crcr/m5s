@@ -8,6 +8,7 @@ import (
     "time"
 
     "m5s/internal/agent"
+    "m5s/internal/repository"
 
     internalLogger "m5s/pkg/logger"
     "m5s/pkg/logger/providers"
@@ -34,7 +35,10 @@ func execute(cfg *Config) {
         "addr", cfg.Addr,
     )
 
+    serverRepository := repository.NewInMemStorage()
+
     agentService := agent.NewAgentService(
+        serverRepository,
         agent.WithLogger(logger),
         agent.WithAddress(cfg.Addr),
         agent.WithPollInterval(time.Duration(cfg.PollInterval)*time.Second),

@@ -13,24 +13,37 @@ import (
 
 func (as *Service) StartReportTicker() {
     var client = &http.Client{
-        Timeout:   time.Second * 1,
-        Transport: &http.Transport{},
+        Timeout: time.Second * 1,
+        Transport: &http.Transport{
+            DisableKeepAlives: false,
+        },
     }
 
-    as.logger.Info("Starting report ticker", "duration", as.reportInterval)
+    as.logger.Info(
+        "Starting report ticker",
+        "reportInterval", as.config.reportInterval,
+    )
 
-    ticker := time.NewTicker(as.reportInterval)
+    ticker := time.NewTicker(as.config.reportInterval)
 
     for range ticker.C {
         for _, metric := range as.repo.GetMetricsList() {
-            if err := as.makeRequest(client, metric); err != nil {
-                as.logger.Error("make reporter request", "error", err)
+            if err := makeRequest(
+                client,
+                fmt.Sprintf("http://%s/update/", as.config.serverAddr),
+                metric,
+            ); err != nil {
+                as.logger.Error("reporter request", "error", err)
             }
         }
     }
 }
 
-func (as *Service) makeRequest(client *http.Client, metric *domain.Metric) error {
+func makeRequest(
+    client *http.Client,
+    uri string,
+    metric *domain.Metric,
+) error {
     modelMetric := &models.Metrics{
         ID:    metric.Name,
         MType: metric.Type.String(),
@@ -53,25 +66,23 @@ func (as *Service) makeRequest(client *http.Client, metric *domain.Metric) error
 
     request, err := http.NewRequest(
         http.MethodPost,
-        fmt.Sprintf("http://%s/update/", as.serverAddr),
+        uri,
         bytes.NewBuffer(bytesMetric),
     )
     if err != nil {
         return fmt.Errorf("execute http request: %v", err)
     }
 
+    request.Close = true
+
     request.Header.Set("Content-Type", "application/json")
-    request.Header.Set("Content-Encoding", "gzip")
+    //request.Header.Set("Content-Encoding", "gzip")
 
     response, err := client.Do(request)
     if err != nil {
         return err
     }
     defer response.Body.Close()
-
-    //if _, err := io.Copy(io.Discard, response.Body); err != nil {
-    //    return err
-    //}
 
     return nil
 }

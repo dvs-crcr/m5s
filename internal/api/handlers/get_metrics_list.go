@@ -3,7 +3,7 @@ package handlers
 import "net/http"
 
 func (h *Handler) GetMetricsList(w http.ResponseWriter, r *http.Request) {
-    w.Header().Set("Content-Type", "text/html; charset=UTF-8")
+    w.Header().Set("Content-Type", "text/html")
 
     metricsList := h.serverService.GetMetricsList()
 

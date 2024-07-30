@@ -9,6 +9,7 @@ import (
 
     "m5s/internal/api/handlers"
     "m5s/internal/api/middleware"
+    "m5s/internal/repository"
     "m5s/internal/server"
     internalLogger "m5s/pkg/logger"
     "m5s/pkg/logger/providers"
@@ -32,7 +33,10 @@ func execute(cfg *Config) error {
         internalLogger.WithLogLevel(cfg.LogLevel),
     )
 
+    serverRepository := repository.NewInMemStorage()
+
     serverService := server.NewServerService(
+        serverRepository,
         server.WithLogger(logger),
         server.WithStoreInterval(time.Duration(cfg.StoreInterval)*time.Second),
         server.WithFileStoragePath(cfg.FileStoragePath),
@@ -42,8 +46,8 @@ func execute(cfg *Config) error {
     serverService.RestoreData()
 
     apiHandler := handlers.NewHandler(
-        logger,
-        serverService,
+        serverService, handlers.WithLogger(logger),
+
     )
     apiMiddleware := middleware.NewMiddleware(logger)
 

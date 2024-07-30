@@ -8,14 +8,18 @@ import (
     "m5s/pkg/compressor"
 )
 
-func isClientSupportCompression(contentType string, acceptEncoding string) bool {
+func isClientSupportCompression(
+    accept string,
+    contentType string,
+    acceptEncoding string,
+) bool {
     if !api.CheckContentType(
         contentType, "application/json", "text/html",
-    ) {
+    ) && accept != "html/text" {
         return false
     }
 
-    if isGzip := strings.Contains(acceptEncoding, "gzip"); !isGzip {
+    if !strings.Contains(acceptEncoding, "gzip") {
         return false
     }
 
@@ -27,6 +31,7 @@ func (m *Middleware) WithCompression(next http.Handler) http.Handler {
         ow := w
 
         if isClientSupportCompression(
+            r.Header.Get("Accept"),
             r.Header.Get("Content-Type"),
             r.Header.Get("Accept-Encoding"),
         ) {
@@ -36,8 +41,7 @@ func (m *Middleware) WithCompression(next http.Handler) http.Handler {
             defer cw.Close()
         }
 
-        contentEncoding := r.Header.Get("Content-Encoding")
-        sendsGzip := strings.Contains(contentEncoding, "gzip")
+        sendsGzip := strings.Contains(r.Header.Get("Content-Encoding"), "gzip")
         if sendsGzip {
             cr, err := compressor.NewCompressReader(r.Body)
             if err != nil {

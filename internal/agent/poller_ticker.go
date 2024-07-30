@@ -4,17 +4,23 @@ import (
     "time"
 
     "m5s/domain"
+    "m5s/internal/models"
 )
 
 func (as *Service) StartPollTicker() {
-    as.logger.Info("Starting poll ticker", "duration", as.pollInterval)
+    as.logger.Info(
+        "Starting poll ticker",
+        "pollInterval", as.config.pollInterval,
+    )
 
-    ticker := time.NewTicker(as.pollInterval)
+    stat := models.NewStatistics()
+
+    ticker := time.NewTicker(as.config.pollInterval)
 
     for range ticker.C {
-        as.stat.Refresh()
+        stat.Refresh()
 
-        for name, value := range as.stat.CurrentValues {
+        for name, value := range stat.CurrentValues {
             metric := domain.NewGauge(name, value)
             if err := as.repo.Update(metric); err != nil {
                 as.logger.Error("update gauge", "error", err)

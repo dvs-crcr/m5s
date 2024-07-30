@@ -10,9 +10,22 @@ type Handler struct {
     logger        logger.Logger
 }
 
-func NewHandler(loggerInstance logger.Logger, service *server.Service) *Handler {
-    return &Handler{
-        serverService: service,
-        logger:        loggerInstance,
+type Option func(handler *Handler)
+
+func NewHandler(serverService *server.Service, options ...Option) *Handler {
+    handler := &Handler{
+        serverService: serverService,
+    }
+
+    for _, opt := range options {
+        opt(handler)
+    }
+
+    return handler
+}
+
+func WithLogger(logger logger.Logger) Option {
+    return func(handler *Handler) {
+        handler.logger = logger
     }
 }

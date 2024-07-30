@@ -4,8 +4,6 @@ import (
     "time"
 
     "m5s/domain"
-    "m5s/internal/models"
-    "m5s/internal/repository"
     "m5s/pkg/logger"
 )
 
@@ -14,24 +12,23 @@ type Repo interface {
     GetMetricsList() []*domain.Metric
 }
 
-type Service struct {
-    repo           Repo
-    stat           *models.Statistics
-    logger         logger.Logger
+type Config struct {
     serverAddr     string
     pollInterval   time.Duration
     reportInterval time.Duration
 }
 
+type Service struct {
+    repo   Repo
+    logger logger.Logger
+    config Config
+}
+
 type Option func(*Service)
 
-func NewAgentService(options ...Option) *Service {
-    repo := repository.NewInMemStorage()
-    stat := models.NewStatistics()
-
+func NewAgentService(repo Repo, options ...Option) *Service {
     service := &Service{
         repo: repo,
-        stat: stat,
     }
 
     for _, opt := range options {
@@ -49,18 +46,18 @@ func WithLogger(logger logger.Logger) Option {
 
 func WithAddress(serverAddr string) Option {
     return func(service *Service) {
-        service.serverAddr = serverAddr
+        service.config.serverAddr = serverAddr
     }
 }
 
 func WithPollInterval(pollInterval time.Duration) Option {
     return func(service *Service) {
-        service.pollInterval = pollInterval
+        service.config.pollInterval = pollInterval
     }
 }
 
 func WithReportInterval(reportInterval time.Duration) Option {
     return func(service *Service) {
-        service.reportInterval = reportInterval
+        service.config.reportInterval = reportInterval
     }
 }

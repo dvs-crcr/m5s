@@ -4,7 +4,6 @@ import (
     "time"
 
     "m5s/domain"
-    "m5s/internal/repository"
     "m5s/pkg/logger"
 )
 
@@ -14,19 +13,21 @@ type Repo interface {
     GetMetricsList() []*domain.Metric
 }
 
-type Service struct {
-    repo            Repo
-    logger          logger.Logger
+type Config struct {
     storeInterval   time.Duration
     fileStoragePath string
     restore         bool
 }
 
+type Service struct {
+    repo   Repo
+    logger logger.Logger
+    config Config
+}
+
 type Option func(*Service)
 
-func NewServerService(options ...Option) *Service {
-    repo := repository.NewInMemStorage()
-
+func NewServerService(repo Repo, options ...Option) *Service {
     service := &Service{
         repo: repo,
     }
@@ -46,19 +47,19 @@ func WithLogger(logger logger.Logger) Option {
 
 func WithStoreInterval(storeInterval time.Duration) Option {
     return func(service *Service) {
-        service.storeInterval = storeInterval
+        service.config.storeInterval = storeInterval
     }
 }
 
 func WithFileStoragePath(fileStoragePath string) Option {
     return func(service *Service) {
-        service.fileStoragePath = fileStoragePath
+        service.config.fileStoragePath = fileStoragePath
     }
 }
 
 func WithRestore(restore bool) Option {
     return func(service *Service) {
-        service.restore = restore
+        service.config.restore = restore
     }
 }
 
@@ -135,12 +136,12 @@ func (ss *Service) GetMetricsList() string {
 }
 
 func (ss *Service) RestoreData() {
-    if !ss.restore {
+    if !ss.config.restore {
         return
     }
 
     ss.logger.Info(
-        "Restoring data", "src", ss.fileStoragePath,
+        "Restoring data", "src", ss.config.fileStoragePath,
         // TODO: implement backup
     )
 }
