@@ -1,4 +1,4 @@
-package api
+package handlers
 
 import (
     "io"
@@ -13,16 +13,19 @@ import (
     "m5s/internal/server"
 )
 
-//nolint:funlen
 func TestHandler_Update(t *testing.T) {
-    handler := &Handler{
-        serverService: server.NewServerService(
-            repository.NewInMemStorage(),
-        ),
-        Mux: http.NewServeMux(),
-    }
+    mux := http.NewServeMux()
 
-    handler.Mux.HandleFunc("/update/", handler.Update)
+    serverRepository := repository.NewInMemStorage()
+    serverService := server.NewServerService(
+        serverRepository,
+    )
+
+    handler := NewHandler(
+        serverService,
+    )
+
+    mux.HandleFunc("/update/", handler.Update)
 
     type want struct {
         code        int

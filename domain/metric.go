@@ -21,10 +21,10 @@ const (
 )
 
 type Metric struct {
-    Name       string
-    Type       MetricType
-    FloatValue float64
-    IntValue   int64
+    Name       string     `json:"name"`
+    Type       MetricType `json:"type"`
+    FloatValue float64    `json:"float_value"`
+    IntValue   int64      `json:"int_value"`
 }
 
 func (mt MetricType) String() string {
@@ -85,7 +85,7 @@ func NewCounter(name string, value int64) *Metric {
     }
 }
 
-func (m *Metric) String() string {
+func (m *Metric) Value() string {
     switch m.Type {
     case MetricTypeGauge:
         return strconv.FormatFloat(m.FloatValue, 'g', -1, 64)
@@ -94,6 +94,12 @@ func (m *Metric) String() string {
     default:
         return ""
     }
+}
+
+func (m *Metric) String() string {
+    return fmt.Sprintf(
+        "%s(%s)=%s\n", m.Name, m.Type, m.Value(),
+    )
 }
 
 func validateCounter(name string, value string) (int64, error) {

@@ -6,20 +6,23 @@ import (
     "strconv"
 )
 
-type Config struct {
-    Addr           string
-    PollInterval   int64
-    ReportInterval int64
-}
-
 var (
+    DefaultLogLevel             = "info"
     DefaultAddress              = "localhost:8080"
     DefaultPollInterval   int64 = 2
     DefaultReportInterval int64 = 10
 )
 
+type Config struct {
+    LogLevel       string
+    Addr           string
+    PollInterval   int64
+    ReportInterval int64
+}
+
 func NewDefaultConfig() *Config {
     return &Config{
+        LogLevel:       DefaultLogLevel,
         Addr:           DefaultAddress,
         PollInterval:   DefaultPollInterval,
         ReportInterval: DefaultReportInterval,
@@ -32,6 +35,9 @@ func (c *Config) parseVariables() error {
     flag.StringVar(
         &c.Addr, "a", c.Addr, "server endpoint address",
     )
+    flag.StringVar(
+        &c.LogLevel, "l", c.LogLevel, "logging level",
+    )
     flag.Int64Var(
         &c.ReportInterval, "r", c.ReportInterval, "report interval (sec)",
     )
@@ -43,6 +49,10 @@ func (c *Config) parseVariables() error {
 
     if addrEnv := os.Getenv("ADDRESS"); addrEnv != "" {
         c.Addr = addrEnv
+    }
+
+    if logLevelEnv := os.Getenv("LOG_LEVEL"); logLevelEnv != "" {
+        c.LogLevel = logLevelEnv
     }
 
     if reportEnv := os.Getenv("REPORT_INTERVAL"); reportEnv != "" {

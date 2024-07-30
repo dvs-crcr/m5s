@@ -27,3 +27,4 @@ vendor/
 
 # Project
 coverage.out
+tmp/
