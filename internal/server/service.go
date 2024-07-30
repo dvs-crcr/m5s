@@ -43,6 +43,11 @@ func NewServerService(repo Repo, options ...Option) *Service {
         opt(service)
     }
 
+    if service.storage != nil {
+        service.RestoreMetrics()
+        go service.StartStoreTicker()
+    }
+
     return service
 }
 
@@ -84,7 +89,7 @@ func (ss *Service) Update(
         return err
     }
 
-    if ss.config.storeInterval == 0 {
+    if ss.storage != nil && ss.config.storeInterval == 0 {
         if err := ss.BackupMetrics(); err != nil {
             return err
         }

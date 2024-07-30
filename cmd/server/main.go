@@ -43,10 +43,9 @@ func execute(cfg *Config) error {
         server.WithRestore(cfg.Restore),
     )
 
-    serverService.RestoreMetrics()
-
     apiHandler := handlers.NewHandler(
-        serverService, handlers.WithLogger(logger),
+        serverService,
+        handlers.WithLogger(logger),
     )
 
     apiMiddleware := middleware.NewMiddleware(logger)
@@ -67,8 +66,6 @@ func execute(cfg *Config) error {
         r.Post("/", apiHandler.GetMetricJSON)
         r.Get("/{metricType}/{metricName}", apiHandler.GetMetric)
     })
-
-    go serverService.StartStoreTicker()
 
     // TODO: implement "gracefull shutdown"
     //signalChannel := make(chan os.Signal, 1)

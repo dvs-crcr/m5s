@@ -16,8 +16,13 @@ import (
 func TestHandler_Update(t *testing.T) {
     mux := http.NewServeMux()
 
+    serverRepository := repository.NewInMemStorage()
+    serverService := server.NewServerService(
+        serverRepository,
+    )
+
     handler := NewHandler(
-        server.NewServerService(repository.NewInMemStorage()),
+        serverService,
     )
 
     mux.HandleFunc("/update/", handler.Update)

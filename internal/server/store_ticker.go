@@ -3,7 +3,7 @@ package server
 import "time"
 
 func (ss *Service) StartStoreTicker() {
-    if ss.config.storeInterval == 0 {
+    if ss.storage != nil && ss.config.storeInterval == 0 {
         return
     }
 
