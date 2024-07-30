@@ -2,6 +2,7 @@ package agent
 
 import (
     "bytes"
+    "compress/gzip"
     "encoding/json"
     "fmt"
     "net/http"
@@ -56,18 +57,18 @@ func makeRequest(
         return err
     }
 
-    //var buf bytes.Buffer
-    //
-    //zw := gzip.NewWriter(&buf)
-    //if _, err = zw.Write(bytesMetric); err != nil {
-    //    return err
-    //}
-    //zw.Close()
+    var buf bytes.Buffer
+
+    zw := gzip.NewWriter(&buf)
+    if _, err = zw.Write(bytesMetric); err != nil {
+        return err
+    }
+    zw.Close()
 
     request, err := http.NewRequest(
         http.MethodPost,
         uri,
-        bytes.NewBuffer(bytesMetric),
+        &buf,
     )
     if err != nil {
         return fmt.Errorf("execute http request: %v", err)
@@ -76,7 +77,7 @@ func makeRequest(
     request.Close = true
 
     request.Header.Set("Content-Type", "application/json")
-    //request.Header.Set("Content-Encoding", "gzip")
+    request.Header.Set("Content-Encoding", "gzip")
 
     response, err := client.Do(request)
     if err != nil {

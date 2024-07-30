@@ -4,6 +4,7 @@ import (
     "time"
 
     "m5s/domain"
+    "m5s/internal/repository"
     "m5s/pkg/logger"
 )
 
@@ -11,18 +12,24 @@ type Repo interface {
     Update(metric *domain.Metric) error
     GetMetric(metricType domain.MetricType, name string) (*domain.Metric, error)
     GetMetricsList() []*domain.Metric
+    UpdateMetrics(metrics []*domain.Metric) error
+}
+
+type Storage interface {
+    GetMetricsList() ([]*domain.Metric, error)
+    UpdateMetrics(metrics []*domain.Metric) error
 }
 
 type Config struct {
-    storeInterval   time.Duration
-    fileStoragePath string
-    restore         bool
+    storeInterval time.Duration
+    restore       bool
 }
 
 type Service struct {
-    repo   Repo
-    logger logger.Logger
-    config Config
+    repo    Repo
+    storage Storage
+    logger  logger.Logger
+    config  Config
 }
 
 type Option func(*Service)
@@ -51,9 +58,9 @@ func WithStoreInterval(storeInterval time.Duration) Option {
     }
 }
 
-func WithFileStoragePath(fileStoragePath string) Option {
+func WithStorage(fileStoragePath string) Option {
     return func(service *Service) {
-        service.config.fileStoragePath = fileStoragePath
+        service.storage = repository.NewInFileStorage(fileStoragePath)
     }
 }
 
@@ -73,7 +80,17 @@ func (ss *Service) Update(
         return err
     }
 
-    return ss.repo.Update(metric)
+    if err := ss.repo.Update(metric); err != nil {
+        return err
+    }
+
+    if ss.config.storeInterval == 0 {
+        if err := ss.BackupMetrics(); err != nil {
+            return err
+        }
+    }
+
+    return nil
 }
 
 func (ss *Service) GetMetric(
@@ -135,13 +152,30 @@ func (ss *Service) GetMetricsList() string {
     return buffer
 }
 
-func (ss *Service) RestoreData() {
+func (ss *Service) RestoreMetrics() {
     if !ss.config.restore {
         return
     }
 
-    ss.logger.Info(
-        "Restoring data", "src", ss.config.fileStoragePath,
-        // TODO: implement backup
-    )
+    storageMetrics, err := ss.storage.GetMetricsList()
+    if err != nil {
+        ss.logger.Error(
+            "restore metrics",
+            "error", err,
+        )
+    }
+
+    if err := ss.repo.UpdateMetrics(storageMetrics); err != nil {
+        ss.logger.Error(err.Error())
+    }
+}
+
+func (ss *Service) BackupMetrics() error {
+    metrics := ss.repo.GetMetricsList()
+
+    if err := ss.storage.UpdateMetrics(metrics); err != nil {
+        return err
+    }
+
+    return nil
 }

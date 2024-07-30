@@ -1,6 +1,7 @@
 package repository
 
 import (
+    "fmt"
     "sync"
 
     "m5s/domain"
@@ -41,12 +42,22 @@ func (ims *InMemStorage) Update(metric *domain.Metric) error {
     return nil
 }
 
+func (ims *InMemStorage) UpdateMetrics(metrics []*domain.Metric) error {
+    for _, metric := range metrics {
+        if err := ims.Update(metric); err != nil {
+            return fmt.Errorf("unable to restore metric: %v: %w", metric, err)
+        }
+    }
+
+    return nil
+}
+
 func (ims *InMemStorage) GetMetric(
     metricType domain.MetricType,
     name string,
 ) (*domain.Metric, error) {
-    ims.Lock()
-    defer ims.Unlock()
+    ims.RLock()
+    defer ims.RUnlock()
 
     if name == "" {
         return nil, domain.ErrInvalidMetricName
@@ -65,8 +76,8 @@ func (ims *InMemStorage) GetMetric(
 }
 
 func (ims *InMemStorage) GetMetricsList() []*domain.Metric {
-    ims.Lock()
-    defer ims.Unlock()
+    ims.RLock()
+    defer ims.RUnlock()
 
     metrics := make([]*domain.Metric, len(ims.store))
 

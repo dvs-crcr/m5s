@@ -10,8 +10,7 @@ var (
     DefaultLogLevel              = "info"
     DefaultAddress               = "localhost:8080"
     DefaultStoreInterval   int64 = 300
-    DefaultFileStoragePath       = ""
-    DefaultRestore               = true
+    DefaultFileStoragePath       = "tmp/file_storage"
 )
 
 type Config struct {
@@ -28,7 +27,7 @@ func NewDefaultConfig() *Config {
         Addr:            DefaultAddress,
         StoreInterval:   DefaultStoreInterval,
         FileStoragePath: DefaultFileStoragePath,
-        Restore:         DefaultRestore,
+        Restore:         true,
     }
 }
 
@@ -79,9 +78,10 @@ func (c *Config) parseVariables() error {
         c.FileStoragePath = fileStorageEnv
     }
 
-    if restoreEnv := os.Getenv("RESTORE");
-        restoreEnv != "true" && restoreEnv != "TRUE" {
-        c.Restore = false
+    if restoreEnv := os.Getenv("RESTORE"); restoreEnv != "" {
+        if restoreEnv == "false" || restoreEnv == "FALSE" {
+            c.Restore = false
+        }
     }
 
     return nil

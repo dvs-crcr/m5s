@@ -39,23 +39,25 @@ func execute(cfg *Config) error {
         serverRepository,
         server.WithLogger(logger),
         server.WithStoreInterval(time.Duration(cfg.StoreInterval)*time.Second),
-        server.WithFileStoragePath(cfg.FileStoragePath),
+        server.WithStorage(cfg.FileStoragePath),
         server.WithRestore(cfg.Restore),
     )
 
-    serverService.RestoreData()
+    serverService.RestoreMetrics()
 
     apiHandler := handlers.NewHandler(
         serverService, handlers.WithLogger(logger),
-
     )
+
     apiMiddleware := middleware.NewMiddleware(logger)
 
     r := chi.NewRouter()
 
+    // Middlewares
     r.Use(apiMiddleware.WithLogger)
     r.Use(apiMiddleware.WithCompression)
 
+    // Routes
     r.Get("/", apiHandler.GetMetricsList)
     r.Route("/update", func(r chi.Router) {
         r.Post("/", apiHandler.UpdateJSON)
@@ -68,7 +70,7 @@ func execute(cfg *Config) error {
 
     go serverService.StartStoreTicker()
 
-    // TODO: add "gracefully shutdown"
+    // TODO: implement "gracefull shutdown"
     //signalChannel := make(chan os.Signal, 1)
     //signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
     //<-signalChannel

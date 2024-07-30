@@ -3,16 +3,23 @@ package server
 import "time"
 
 func (ss *Service) StartStoreTicker() {
+    if ss.config.storeInterval == 0 {
+        return
+    }
+
     ss.logger.Info(
         "Starting store ticker",
         "storeInterval", ss.config.storeInterval,
-        "storagePath", ss.config.fileStoragePath,
     )
 
     ticker := time.NewTicker(ss.config.storeInterval)
 
     for range ticker.C {
-
-        // TODO: implement
+        if err := ss.BackupMetrics(); err != nil {
+            ss.logger.Error(
+                "Backup metrics",
+                "err", err,
+            )
+        }
     }
 }

@@ -21,10 +21,10 @@ const (
 )
 
 type Metric struct {
-    Name       string
-    Type       MetricType
-    FloatValue float64
-    IntValue   int64
+    Name       string     `json:"name"`
+    Type       MetricType `json:"type"`
+    FloatValue float64    `json:"float_value"`
+    IntValue   int64      `json:"int_value"`
 }
 
 func (mt MetricType) String() string {

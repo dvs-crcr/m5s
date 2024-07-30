@@ -1,6 +1,7 @@
 package main
 
 import (
+    "context"
     "log"
     "os"
     "os/signal"
@@ -48,8 +49,12 @@ func execute(cfg *Config) {
     go agentService.StartPollTicker()
     go agentService.StartReportTicker()
 
-    // TODO: add "gracefully shutdown"
+    // TODO: implement "gracefull shutdown"
     signalChannel := make(chan os.Signal, 1)
     signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
     <-signalChannel
+}
+
+func Shutdown(ctx context.Context) {
+
 }
