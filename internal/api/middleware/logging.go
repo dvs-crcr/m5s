@@ -27,7 +27,7 @@ func (r *loggingResponseWriter) WriteHeader(statusCode int) {
     r.responseData.status = statusCode
 }
 
-func (m *Middleware) WithLogger(next http.Handler) http.Handler {
+func (m *Middleware) WithRequestLogger(next http.Handler) http.Handler {
     logFn := func(w http.ResponseWriter, r *http.Request) {
         start := time.Now()
 

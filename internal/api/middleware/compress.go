@@ -26,7 +26,7 @@ func isClientSupportCompression(
     return true
 }
 
-func (m *Middleware) WithCompression(next http.Handler) http.Handler {
+func WithCompression(next http.Handler) http.Handler {
     return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
         ow := w
 

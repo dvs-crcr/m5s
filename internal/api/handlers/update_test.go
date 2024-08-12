@@ -10,7 +10,6 @@ import (
 
     "github.com/go-chi/chi/v5"
     "github.com/stretchr/testify/assert"
-    "github.com/stretchr/testify/require"
 
     "m5s/internal/repository"
     "m5s/internal/server"
@@ -107,17 +106,23 @@ func TestHandler_Update(t *testing.T) {
                 testServer.URL+tt.target,
                 nil,
             )
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
 
             res, err := testClient.Do(req)
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
             defer res.Body.Close()
 
             // Check StatusCode
             assert.Equal(t, tt.want.code, res.StatusCode)
 
             _, err = io.ReadAll(res.Body)
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
 
             // Check Content-Type
             assert.Contains(t, res.Header.Get("Content-Type"), tt.want.contentType)
@@ -266,19 +271,25 @@ func TestHandler_UpdateJSON(t *testing.T) {
                 testServer.URL+"/update/",
                 strings.NewReader(tt.payload),
             )
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
 
             req.Header.Set("Content-Type", tt.contentType)
 
             res, err := testClient.Do(req)
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
             defer res.Body.Close()
 
             // Check StatusCode
             assert.Equal(t, tt.want.code, res.StatusCode)
 
             _, err = io.ReadAll(res.Body)
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
 
             // Check Content-Type
             assert.Contains(t, res.Header.Get("Content-Type"), tt.want.contentType)

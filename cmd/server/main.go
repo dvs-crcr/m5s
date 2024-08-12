@@ -27,6 +27,7 @@ func main() {
 }
 
 func execute(cfg *Config) error {
+    // Init logger
     loggerProvider := providers.NewZapProvider()
     logger := internalLogger.NewLogger(
         internalLogger.WithProvider(loggerProvider),
@@ -53,9 +54,10 @@ func execute(cfg *Config) error {
     r := chi.NewRouter()
 
     // Middlewares
-    r.Use(apiMiddleware.WithLogger)
-    r.Use(apiMiddleware.WithCompression)
+    r.Use(apiMiddleware.WithRequestLogger)
+    r.Use(middleware.WithCompression)
 
+    // Routes
     r.Route("/", func(r chi.Router) {
         r.Get("/", apiHandler.GetMetricsList)
 

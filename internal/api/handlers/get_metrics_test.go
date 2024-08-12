@@ -10,7 +10,6 @@ import (
 
     "github.com/go-chi/chi/v5"
     "github.com/stretchr/testify/assert"
-    "github.com/stretchr/testify/require"
 
     "m5s/domain"
     "m5s/internal/repository"
@@ -109,19 +108,25 @@ func TestHandler_GetMetric(t *testing.T) {
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
             req, err := http.NewRequest(tt.method, testServer.URL+tt.target, nil)
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
 
             req.Header.Set("Content-Type", "text/plain")
 
             res, err := testClient.Do(req)
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
             defer res.Body.Close()
 
             // Check StatusCode
             assert.Equal(t, tt.want.code, res.StatusCode)
 
             body, err := io.ReadAll(res.Body)
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
 
             // Check content
             assert.Equal(t, tt.want.value, string(body))
@@ -238,19 +243,25 @@ func TestHandler_GetMetricJSON(t *testing.T) {
                 testServer.URL+"/value",
                 strings.NewReader(tt.payload),
             )
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
 
             req.Header.Set("Content-Type", tt.contentType)
 
             res, err := testClient.Do(req)
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
             defer res.Body.Close()
 
             // Check StatusCode
             assert.Equal(t, tt.want.code, res.StatusCode)
 
             body, err := io.ReadAll(res.Body)
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
 
             // Check content
             if tt.want.value != "" {
@@ -333,17 +344,23 @@ func TestHandler_GetMetricsList(t *testing.T) {
                 testServer.URL+"/",
                 nil,
             )
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
 
             res, err := testClient.Do(req)
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
             defer res.Body.Close()
 
             // Check StatusCode
             assert.Equal(t, tt.want.code, res.StatusCode)
 
             body, err := io.ReadAll(res.Body)
-            require.NoError(t, err)
+            if err != nil {
+                t.Fatal(err)
+            }
 
             // Check content
             if tt.want.result {
