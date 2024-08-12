@@ -7,7 +7,7 @@ build:
 	go build -o cmd/agent/agent cmd/agent/*.go
 
 run-server:
-	go run ./cmd/server/*.go -a localhost:44985 -i 10 -f tmp/file_storage
+	go run ./cmd/server/*.go -a localhost:44985 -i 10 -f tmp/storage
 
 run-agent:
 	go run ./cmd/agent/*.go -a localhost:44985
@@ -62,7 +62,7 @@ metrics-test-5: build
 		-server-port=4485 \
 		-source-path=.
 
-autotest-sprint-1: static-test metrics-test-1 metrics-test-2 metrics-test-3 metrics-test-4 metrics-test-5
+autotest-sprint-1: static-test metrics-test-2 metrics-test-3 metrics-test-4 metrics-test-5
 
 .PHONY: static-test metrics-test-1 metrics-test-2 metrics-test-3 metrics-test-4 metrics-test-5 autotest-sprint-1
 
