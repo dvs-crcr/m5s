@@ -109,6 +109,7 @@ func TestHandler_Update(t *testing.T) {
 
             res, err := testClient.Do(req)
             require.NoError(t, err)
+            defer res.Body.Close()
 
             // Check StatusCode
             assert.Equal(t, tt.want.code, res.StatusCode)
