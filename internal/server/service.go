@@ -170,6 +170,10 @@ func (ss *Service) RestoreMetrics() {
         )
     }
 
+    ss.logger.Info("Restore metrics from storage",
+        "data", storageMetrics,
+    )
+
     if err := ss.repo.UpdateMetrics(storageMetrics); err != nil {
         ss.logger.Error(err.Error())
     }
