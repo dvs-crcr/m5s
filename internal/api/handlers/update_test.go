@@ -105,7 +105,10 @@ func TestHandler_Update(t *testing.T) {
             var err error
 
             req, err := http.NewRequest(tt.method, testServer.URL+tt.target, nil)
+            require.NoError(t, err)
+
             res, err := testClient.Do(req)
+            require.NoError(t, err)
 
             // Check StatusCode
             assert.Equal(t, tt.want.code, res.StatusCode)
