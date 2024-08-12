@@ -67,11 +67,6 @@ func execute(cfg *Config) error {
         r.Get("/{metricType}/{metricName}", apiHandler.GetMetric)
     })
 
-    // TODO: implement "gracefull shutdown"
-    //signalChannel := make(chan os.Signal, 1)
-    //signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)
-    //<-signalChannel
-
     logger.Info(
         "Starting server",
         "addr", cfg.Addr,
