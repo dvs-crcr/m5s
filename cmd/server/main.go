@@ -56,15 +56,18 @@ func execute(cfg *Config) error {
     r.Use(apiMiddleware.WithLogger)
     r.Use(apiMiddleware.WithCompression)
 
-    // Routes
-    r.Get("/", apiHandler.GetMetricsList)
-    r.Route("/update", func(r chi.Router) {
-        r.Post("/", apiHandler.UpdateJSON)
-        r.Post("/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
-    })
-    r.Route("/value", func(r chi.Router) {
-        r.Post("/", apiHandler.GetMetricJSON)
-        r.Get("/{metricType}/{metricName}", apiHandler.GetMetric)
+    r.Route("/", func(r chi.Router) {
+        r.Get("/", apiHandler.GetMetricsList)
+
+        r.Route("/update", func(r chi.Router) {
+            r.Post("/", apiHandler.UpdateJSON)
+            r.Post("/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
+        })
+
+        r.Route("/value", func(r chi.Router) {
+            r.Post("/", apiHandler.GetMetricJSON)
+            r.Get("/{metricType}/{metricName}", apiHandler.GetMetric)
+        })
     })
 
     logger.Info(
