@@ -32,7 +32,7 @@ func execute(cfg *Config) {
 
     logger.Info(
         "Starting agent",
-        "addr", cfg.Addr,
+        "config", cfg,
     )
 
     serverRepository := repository.NewInMemStorage()

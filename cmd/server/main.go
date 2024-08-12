@@ -69,7 +69,7 @@ func execute(cfg *Config) error {
 
     logger.Info(
         "Starting server",
-        "addr", cfg.Addr,
+        "config", cfg,
     )
     return http.ListenAndServe(cfg.Addr, r)
 }
