@@ -7,7 +7,7 @@ import (
 )
 
 type Statistics struct {
-    sync.RWMutex
+    sync.Mutex
     mStat         runtime.MemStats
     CurrentValues map[string]float64
 }
