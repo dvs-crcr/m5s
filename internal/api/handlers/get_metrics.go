@@ -3,7 +3,8 @@ package handlers
 import (
     "encoding/json"
     "net/http"
-    "strings"
+
+    "github.com/go-chi/chi/v5"
 
     "m5s/domain"
     "m5s/internal/api"
@@ -13,21 +14,10 @@ import (
 func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
     w.Header().Set("Content-Type", "text/plain")
 
-    if r.Method != http.MethodGet {
-        api.HandleErrors(api.ErrInvalidMethod, w)
+    metricType := chi.URLParam(r, "metricType")
+    metricName := chi.URLParam(r, "metricName")
 
-        return
-    }
-
-    segments := strings.Split(r.URL.Path, "/")
-
-    if len(segments) < 4 {
-        api.HandleErrors(api.ErrInvalidSegmentsCount, w)
-
-        return
-    }
-
-    metricValue, err := h.serverService.GetMetricValue(segments[2], segments[3])
+    metricValue, err := h.serverService.GetMetricValue(metricType, metricName)
     if err != nil {
         api.HandleErrors(err, w)
 
@@ -44,12 +34,6 @@ func (h *Handler) GetMetricJSON(w http.ResponseWriter, r *http.Request) {
         "application/json",
     ) {
         api.HandleErrors(api.ErrInvalidJSONContentType, w)
-
-        return
-    }
-
-    if r.Method != http.MethodPost {
-        api.HandleErrors(api.ErrInvalidMethod, w)
 
         return
     }
