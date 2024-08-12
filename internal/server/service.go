@@ -89,6 +89,7 @@ func (ss *Service) Update(
         return err
     }
 
+    // Store data to disk if interval is zero
     if ss.storage != nil && ss.config.storeInterval == 0 {
         if err := ss.BackupMetrics(); err != nil {
             return err
