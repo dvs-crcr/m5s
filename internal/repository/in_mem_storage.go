@@ -79,13 +79,10 @@ func (ims *InMemStorage) GetMetricsList() []*domain.Metric {
     ims.RLock()
     defer ims.RUnlock()
 
-    metrics := make([]*domain.Metric, len(ims.store))
-
-    i := 0
+    metrics := make([]*domain.Metric, 0, len(ims.store))
 
     for _, metric := range ims.store {
-        metrics[i] = metric
-        i++
+        metrics = append(metrics, metric)
     }
 
     return metrics
