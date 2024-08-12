@@ -18,6 +18,8 @@ var (
 
 func HandleErrors(err error, w http.ResponseWriter) {
     switch {
+    case errors.Is(err, ErrInvalidJSONStruct):
+        w.WriteHeader(http.StatusBadRequest)
     case errors.Is(err, ErrInternal):
         w.WriteHeader(http.StatusInternalServerError)
     case errors.Is(err, ErrInvalidJSONContentType):
