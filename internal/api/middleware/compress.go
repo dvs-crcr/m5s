@@ -41,8 +41,8 @@ func WithCompression(next http.Handler) http.Handler {
             defer cw.Close()
         }
 
-        sendsGzip := strings.Contains(r.Header.Get("Content-Encoding"), "gzip")
-        if sendsGzip {
+        contentEncoding := r.Header.Get("Content-Encoding")
+        if strings.Contains(contentEncoding, "gzip") {
             cr, err := compressor.NewCompressReader(r.Body)
             if err != nil {
                 api.HandleErrors(api.ErrInternal, w)

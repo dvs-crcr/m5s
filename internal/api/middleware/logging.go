@@ -8,6 +8,7 @@ import (
 type responseData struct {
     status int
     size   int
+    header http.Header
 }
 
 type loggingResponseWriter struct {
@@ -25,6 +26,7 @@ func (r *loggingResponseWriter) Write(b []byte) (int, error) {
 func (r *loggingResponseWriter) WriteHeader(statusCode int) {
     r.ResponseWriter.WriteHeader(statusCode)
     r.responseData.status = statusCode
+    r.responseData.header = r.ResponseWriter.Header()
 }
 
 func (m *Middleware) WithRequestLogger(next http.Handler) http.Handler {
@@ -46,7 +48,8 @@ func (m *Middleware) WithRequestLogger(next http.Handler) http.Handler {
             "method", r.Method,
             "uri", r.RequestURI,
             "ip", r.RemoteAddr,
-            "userAgent", r.UserAgent(),
+            "size", r.ContentLength,
+            "headers", r.Header,
         )
 
         next.ServeHTTP(&lw, r)
@@ -56,6 +59,7 @@ func (m *Middleware) WithRequestLogger(next http.Handler) http.Handler {
             "status", rd.status,
             "duration", time.Since(start),
             "size", rd.size,
+            "headers", rd.header,
         )
     }
 
