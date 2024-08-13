@@ -3,7 +3,6 @@ package middleware
 import (
     "bytes"
     "compress/gzip"
-    "fmt"
     "io"
     "net/http"
     "net/http/httptest"
@@ -66,6 +65,7 @@ func TestMiddleware_WithCompression(t *testing.T) {
         buf := bytes.NewBufferString(requestBody)
         r := httptest.NewRequest("POST", srv.URL, buf)
         r.RequestURI = ""
+        r.Header.Set("Content-Type", "application/json")
         r.Header.Set("Accept-Encoding", "gzip")
 
         resp, err := http.DefaultClient.Do(r)
@@ -74,10 +74,7 @@ func TestMiddleware_WithCompression(t *testing.T) {
 
         defer resp.Body.Close()
 
-        fmt.Println("HEADER-1", resp.Header)
         zr, err := gzip.NewReader(resp.Body)
-        fmt.Println("HEADER-2", resp.Header)
-        fmt.Println("ERRRRR", err)
         require.NoError(t, err)
 
         b, err := io.ReadAll(zr)
