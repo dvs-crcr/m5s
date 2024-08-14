@@ -7,7 +7,11 @@ build:
 	go build -o cmd/agent/agent cmd/agent/*.go
 
 run-server:
-	go run ./cmd/server/*.go -a localhost:44985 -i 0 -f tmp/storage
+	go run ./cmd/server/*.go \
+		-a localhost:44985 \
+		-i 10 \
+		-f tmp/storage \
+		-d "postgres://postgres:postgres@127.0.0.1:9900/praktikum?sslmode=disable"
 
 run-agent:
 	go run ./cmd/agent/*.go -a localhost:44985
@@ -100,3 +104,62 @@ metrics-test-9: build
 autotest-sprint-2: static-test metrics-test-6 metrics-test-7 metrics-test-8 metrics-test-9
 
 .PHONY: metrics-test-6 metrics-test-7 metrics-test-8 metrics-test-9
+
+# Sprint 3
+metrics-test-10: build
+	export ADDRESS=localhost:4485; \
+	metricstest -test.v -test.run=^TestIteration10[AB]$ \
+		-agent-binary-path=cmd/agent/agent \
+		-binary-path=cmd/server/server \
+		-database-dsn='postgres://postgres:postgres@127.0.0.1:9900/praktikum?sslmode=disable' \
+		-server-port=4485 \
+		-source-path=.
+
+metrics-test-11: build
+	export ADDRESS=localhost:4485; \
+	metricstest -test.v -test.run=^TestIteration11$ \
+		-agent-binary-path=cmd/agent/agent \
+		-binary-path=cmd/server/server \
+		-database-dsn='postgres://postgres:postgres@postgres:9900/praktikum?sslmode=disable' \
+		-server-port=4485 \
+		-source-path=.
+
+metrics-test-12: build
+	export ADDRESS=localhost:4485; \
+	metricstest -test.v -test.run=^TestIteration12$ \
+		-agent-binary-path=cmd/agent/agent \
+		-binary-path=cmd/server/server \
+		-database-dsn='postgres://postgres:postgres@postgres:9900/praktikum?sslmode=disable' \
+		-server-port=4485 \
+		-source-path=.
+
+metrics-test-13: build
+	export ADDRESS=localhost:4485; \
+	metricstest -test.v -test.run=^TestIteration13$ \
+		-agent-binary-path=cmd/agent/agent \
+		-binary-path=cmd/server/server \
+		-database-dsn='postgres://postgres:postgres@postgres:9900/praktikum?sslmode=disable' \
+		-server-port=4485 \
+		-source-path=.
+
+autotest-sprint-3: static-test metrics-test-10 metrics-test-11 metrics-test-12 metrics-test-13
+
+.PHONY: metrics-test-10 metrics-test-11 metrics-test-12 metrics-test-13 autotest-sprint-3
+
+# Sprint 4
+metrics-test-14: build
+	export ADDRESS=localhost:4485; \
+	metricstest -test.v -test.run=^TestIteration14$ \
+		-agent-binary-path=cmd/agent/agent \
+		-binary-path=cmd/server/server \
+		-database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable' \
+		-key="${TEMP_FILE}" \
+		-server-port=4485 \
+		-source-path=.
+
+metrics-test-14-race:
+	go test -v -race ./...
+
+autotest-sprint-4: static-test metrics-test-14 metrics-test-14-race
+
+.PHONY: metrics-test-14 metrics-test-14-race autotest-sprint-4

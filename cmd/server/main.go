@@ -1,6 +1,7 @@
 package main
 
 import (
+    "context"
     "log"
     "net/http"
     "time"
@@ -27,6 +28,8 @@ func main() {
 }
 
 func execute(cfg *Config) error {
+    ctx := context.Background()
+
     // Init logger
     loggerProvider := providers.NewZapProvider()
     logger := internalLogger.NewLogger(
@@ -38,9 +41,11 @@ func execute(cfg *Config) error {
         storage.NewMemStorage(),
         server.WithLogger(logger),
         server.WithStorage(
+            ctx,
             cfg.Restore,
             cfg.FileStoragePath,
             time.Duration(cfg.StoreInterval)*time.Second,
+            cfg.DatabaseDSN,
         ),
     )
 
@@ -60,6 +65,8 @@ func execute(cfg *Config) error {
     // Routes
     r.Route("/", func(r chi.Router) {
         r.Get("/", apiHandler.GetMetricsList)
+
+        r.Get("/ping", apiHandler.Ping)
 
         r.Route("/update", func(r chi.Router) {
             r.Post("/", apiHandler.UpdateJSON)

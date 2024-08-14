@@ -10,7 +10,7 @@ import (
 
 func (as *Service) StartPollTicker() {
     as.logger.Info(
-        "Starting poll ticker",
+        "starting poll ticker",
         "pollInterval", as.config.pollInterval,
     )
 

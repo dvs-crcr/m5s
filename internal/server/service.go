@@ -1,6 +1,8 @@
 package server
 
 import (
+    "context"
+    "errors"
     "time"
 
     "m5s/domain"
@@ -9,11 +11,12 @@ import (
 )
 
 type Storage interface {
-    MyType() storage.StorageType
     Update(metric *domain.Metric) error
     GetMetric(metricType domain.MetricType, name string) (*domain.Metric, error)
     GetMetricsList() ([]*domain.Metric, error)
     UpdateMetrics(metrics []*domain.Metric) error
+    MyType() storage.StorageType
+    Ping(ctx context.Context) error
 }
 
 type Config struct {
@@ -29,6 +32,12 @@ type Service struct {
 }
 
 type Option func(*Service)
+
+var (
+    ErrDatabaseNoInit = errors.New(
+        "database instance has not been initialized",
+    )
+)
 
 func NewServerService(cache Storage, options ...Option) *Service {
     service := &Service{
@@ -52,15 +61,27 @@ func WithLogger(logger logger.Logger) Option {
 }
 
 func WithStorage(
+    ctx context.Context,
     restore bool,
     fileStoragePath string,
     storeInterval time.Duration,
+    dsn string,
 ) Option {
     return func(service *Service) {
+        var err error
+
         service.config.restore = restore
         service.config.storeInterval = storeInterval
 
         switch {
+        case dsn != "":
+            service.storage, err = storage.NewDBStorage(ctx, dsn)
+            if err != nil {
+                service.logger.Fatal(
+                    "unable to create new db instance",
+                    "error", err,
+                )
+            }
         case fileStoragePath != "":
             service.storage = storage.NewFileStorage(fileStoragePath)
         default:
@@ -172,7 +193,7 @@ func (ss *Service) RestoreMetrics() {
     }
 
     if err := ss.cache.UpdateMetrics(storageMetrics); err != nil {
-        ss.logger.Error(err.Error())
+        ss.logger.Error("update metrics", "error", err.Error())
     }
 
     ss.logger.Info(
@@ -197,4 +218,16 @@ func (ss *Service) BackupMetrics() error {
     }
 
     return nil
+}
+
+func (ss *Service) PingDB(ctx context.Context) error {
+    if ss.storage == nil {
+        return nil
+    }
+
+    if ss.storage.MyType() != storage.TypeDatabase {
+        return ErrDatabaseNoInit
+    }
+
+    return ss.storage.Ping(ctx)
 }

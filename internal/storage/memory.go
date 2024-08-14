@@ -1,6 +1,7 @@
 package storage
 
 import (
+    "context"
     "fmt"
     "sync"
 
@@ -92,4 +93,8 @@ func (ims *MemStorage) GetMetricsList() ([]*domain.Metric, error) {
     }
 
     return metrics, nil
+}
+
+func (ims *MemStorage) Ping(_ context.Context) error {
+    return nil
 }

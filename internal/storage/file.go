@@ -1,6 +1,7 @@
 package storage
 
 import (
+    "context"
     "encoding/json"
     "errors"
     "os"
@@ -101,4 +102,8 @@ func (ifs *FileStorage) GetMetric(
     }
 
     return nil, nil
+}
+
+func (ifs *FileStorage) Ping(_ context.Context) error {
+    return nil
 }

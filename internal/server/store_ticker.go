@@ -28,7 +28,7 @@ func (ss *Service) StartStoreTicker() {
         if err := ss.BackupMetrics(); err != nil {
             ss.logger.Error(
                 "backup metrics",
-                "err", err,
+                "error", err,
             )
         }
 

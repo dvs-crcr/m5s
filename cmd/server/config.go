@@ -18,6 +18,7 @@ type Config struct {
     Addr            string
     StoreInterval   int64
     FileStoragePath string
+    DatabaseDSN     string
     Restore         bool
 }
 
@@ -28,6 +29,7 @@ func NewDefaultConfig() *Config {
         StoreInterval:   DefaultStoreInterval,
         FileStoragePath: DefaultFileStoragePath,
         Restore:         true,
+        DatabaseDSN:     "",
     }
 }
 
@@ -52,6 +54,10 @@ func (c *Config) parseVariables() error {
 
     flag.BoolVar(
         &c.Restore, "r", c.Restore, "restore file",
+    )
+
+    flag.StringVar(
+        &c.DatabaseDSN, "d", c.DatabaseDSN, "database DSN",
     )
 
     flag.Parse()
@@ -82,6 +88,10 @@ func (c *Config) parseVariables() error {
         if restoreEnv == "false" || restoreEnv == "FALSE" {
             c.Restore = false
         }
+    }
+
+    if dsnEnv := os.Getenv("DATABASE_DSN"); dsnEnv != "" {
+        c.DatabaseDSN = dsnEnv
     }
 
     return nil
