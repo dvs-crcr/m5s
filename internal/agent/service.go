@@ -7,9 +7,10 @@ import (
     "m5s/pkg/logger"
 )
 
-type Repo interface {
+type Storage interface {
     Update(metric *domain.Metric) error
-    GetMetricsList() []*domain.Metric
+    GetMetricsList() ([]*domain.Metric, error)
+    UpdateMetrics(metrics []*domain.Metric) error
 }
 
 type Config struct {
@@ -19,16 +20,16 @@ type Config struct {
 }
 
 type Service struct {
-    repo   Repo
-    logger logger.Logger
-    config Config
+    storage Storage
+    logger  logger.Logger
+    config  Config
 }
 
 type Option func(*Service)
 
-func NewAgentService(repo Repo, options ...Option) *Service {
+func NewAgentService(storage Storage, options ...Option) *Service {
     service := &Service{
-        repo: repo,
+        storage: storage,
     }
 
     for _, opt := range options {

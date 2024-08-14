@@ -7,7 +7,7 @@ build:
 	go build -o cmd/agent/agent cmd/agent/*.go
 
 run-server:
-	go run ./cmd/server/*.go -a localhost:44985 -i 10 -f tmp/storage
+	go run ./cmd/server/*.go -a localhost:44985 -i 0 -f tmp/storage
 
 run-agent:
 	go run ./cmd/agent/*.go -a localhost:44985

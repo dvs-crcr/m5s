@@ -21,14 +21,19 @@ func (as *Service) StartReportTicker() {
     }
 
     as.logger.Info(
-        "Starting report ticker",
+        "starting report ticker",
         "reportInterval", as.config.reportInterval,
     )
 
     ticker := time.NewTicker(as.config.reportInterval)
 
     for range ticker.C {
-        for _, metric := range as.repo.GetMetricsList() {
+        metricsList, err := as.storage.GetMetricsList()
+        if err != nil {
+            as.logger.Error("get metrics list", "error", err)
+        }
+
+        for _, metric := range metricsList {
             if err := makeRequest(
                 client,
                 fmt.Sprintf("http://%s/update/", as.config.serverAddr),

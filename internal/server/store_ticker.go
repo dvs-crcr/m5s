@@ -1,14 +1,24 @@
 package server
 
-import "time"
+import (
+    "time"
 
+    "m5s/internal/storage"
+)
+
+// StartStoreTicker uses for starting Auto-Backup ticker
 func (ss *Service) StartStoreTicker() {
-    if ss.storage != nil && ss.config.storeInterval == 0 {
+    if ss.storage == nil {
+        return
+    }
+
+    if ss.storage.MyType() != storage.TypeFile ||
+        ss.config.storeInterval == 0 {
         return
     }
 
     ss.logger.Info(
-        "Starting store ticker",
+        "starting store ticker",
         "storeInterval", ss.config.storeInterval,
     )
 
@@ -17,9 +27,13 @@ func (ss *Service) StartStoreTicker() {
     for range ticker.C {
         if err := ss.BackupMetrics(); err != nil {
             ss.logger.Error(
-                "Backup metrics",
+                "backup metrics",
                 "err", err,
             )
         }
+
+        ss.logger.Info(
+            "metrics have been successfully backed up to a file",
+        )
     }
 }

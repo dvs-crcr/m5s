@@ -4,18 +4,14 @@ import (
     "time"
 
     "m5s/domain"
-    "m5s/internal/repository"
+    "m5s/internal/storage"
     "m5s/pkg/logger"
 )
 
-type Repo interface {
+type Storage interface {
+    MyType() storage.StorageType
     Update(metric *domain.Metric) error
     GetMetric(metricType domain.MetricType, name string) (*domain.Metric, error)
-    GetMetricsList() []*domain.Metric
-    UpdateMetrics(metrics []*domain.Metric) error
-}
-
-type Storage interface {
     GetMetricsList() ([]*domain.Metric, error)
     UpdateMetrics(metrics []*domain.Metric) error
 }
@@ -26,7 +22,7 @@ type Config struct {
 }
 
 type Service struct {
-    repo    Repo
+    cache   Storage
     storage Storage
     logger  logger.Logger
     config  Config
@@ -34,19 +30,17 @@ type Service struct {
 
 type Option func(*Service)
 
-func NewServerService(repo Repo, options ...Option) *Service {
+func NewServerService(cache Storage, options ...Option) *Service {
     service := &Service{
-        repo: repo,
+        cache: cache,
     }
 
     for _, opt := range options {
         opt(service)
     }
 
-    if service.storage != nil {
-        service.RestoreMetrics()
-        go service.StartStoreTicker()
-    }
+    service.RestoreMetrics()
+    go service.StartStoreTicker()
 
     return service
 }
@@ -57,21 +51,21 @@ func WithLogger(logger logger.Logger) Option {
     }
 }
 
-func WithStoreInterval(storeInterval time.Duration) Option {
-    return func(service *Service) {
-        service.config.storeInterval = storeInterval
-    }
-}
-
-func WithStorage(fileStoragePath string) Option {
-    return func(service *Service) {
-        service.storage = repository.NewInFileStorage(fileStoragePath)
-    }
-}
-
-func WithRestore(restore bool) Option {
+func WithStorage(
+    restore bool,
+    fileStoragePath string,
+    storeInterval time.Duration,
+) Option {
     return func(service *Service) {
         service.config.restore = restore
+        service.config.storeInterval = storeInterval
+
+        switch {
+        case fileStoragePath != "":
+            service.storage = storage.NewFileStorage(fileStoragePath)
+        default:
+            service.storage = nil
+        }
     }
 }
 
@@ -85,12 +79,11 @@ func (ss *Service) Update(
         return err
     }
 
-    if err := ss.repo.Update(metric); err != nil {
+    if err := ss.cache.Update(metric); err != nil {
         return err
     }
 
-    // Store data to disk if interval is zero
-    if ss.storage != nil && ss.config.storeInterval == 0 {
+    if ss.config.storeInterval == 0 {
         if err := ss.BackupMetrics(); err != nil {
             return err
         }
@@ -105,14 +98,14 @@ func (ss *Service) GetMetric(
 ) (*domain.Metric, error) {
     switch metricType {
     case domain.MetricTypeGauge.String():
-        metric, err := ss.repo.GetMetric(domain.MetricTypeGauge, name)
+        metric, err := ss.cache.GetMetric(domain.MetricTypeGauge, name)
         if err != nil {
             return nil, err
         }
 
         return metric, nil
     case domain.MetricTypeCounter.String():
-        metric, err := ss.repo.GetMetric(domain.MetricTypeCounter, name)
+        metric, err := ss.cache.GetMetric(domain.MetricTypeCounter, name)
         if err != nil {
             return nil, err
         }
@@ -129,14 +122,14 @@ func (ss *Service) GetMetricValue(
 ) (string, error) {
     switch metricType {
     case domain.MetricTypeGauge.String():
-        metric, err := ss.repo.GetMetric(domain.MetricTypeGauge, name)
+        metric, err := ss.cache.GetMetric(domain.MetricTypeGauge, name)
         if err != nil {
             return "", err
         }
 
         return metric.Value(), nil
     case domain.MetricTypeCounter.String():
-        metric, err := ss.repo.GetMetric(domain.MetricTypeCounter, name)
+        metric, err := ss.cache.GetMetric(domain.MetricTypeCounter, name)
         if err != nil {
             return "", err
         }
@@ -150,7 +143,12 @@ func (ss *Service) GetMetricValue(
 func (ss *Service) GetMetricsList() string {
     buffer := ""
 
-    metricsList := ss.repo.GetMetricsList()
+    metricsList, err := ss.cache.GetMetricsList()
+    if err != nil {
+        ss.logger.Error("get metrics list", "error", err)
+        return ""
+    }
+
     for _, metric := range metricsList {
         buffer += metric.String()
     }
@@ -158,8 +156,10 @@ func (ss *Service) GetMetricsList() string {
     return buffer
 }
 
+// RestoreMetrics is used to restore metrics from storage to memory cache
 func (ss *Service) RestoreMetrics() {
-    if !ss.config.restore {
+    // Check if the storage exists
+    if ss.storage == nil {
         return
     }
 
@@ -171,19 +171,28 @@ func (ss *Service) RestoreMetrics() {
         )
     }
 
-    ss.logger.Info("Restore metrics from storage",
-        "data", storageMetrics,
-    )
-
-    if err := ss.repo.UpdateMetrics(storageMetrics); err != nil {
+    if err := ss.cache.UpdateMetrics(storageMetrics); err != nil {
         ss.logger.Error(err.Error())
     }
+
+    ss.logger.Info(
+        "metrics have been successfully loaded from file",
+        "data", storageMetrics,
+    )
 }
 
+// BackupMetrics uses for extract metrics from memory cache to persistent storage
 func (ss *Service) BackupMetrics() error {
-    metrics := ss.repo.GetMetricsList()
+    if ss.storage == nil {
+        return nil
+    }
 
-    if err := ss.storage.UpdateMetrics(metrics); err != nil {
+    metricsList, err := ss.cache.GetMetricsList()
+    if err != nil {
+        return err
+    }
+
+    if err := ss.storage.UpdateMetrics(metricsList); err != nil {
         return err
     }
 
