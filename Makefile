@@ -153,7 +153,10 @@ metrics-test-14: build
 		-server-port=4485 \
 		-source-path=.
 
-autotest-sprint-4: static-test metrics-test-14
+metrics-test-14-race:
+	go test -v -race ./...
 
-.PHONY: metrics-test-14 autotest-sprint-4
+autotest-sprint-4: static-test metrics-test-14 metrics-test-14-race
+
+.PHONY: metrics-test-14 metrics-test-14-race autotest-sprint-4
 
