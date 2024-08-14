@@ -1,100 +1,64 @@
 package agent
 
 import (
-	"fmt"
-	"log"
-	"net/http"
-	"time"
+    "time"
 
-	"m5s/domain"
-	"m5s/internal/repository"
+    "m5s/domain"
+    "m5s/pkg/logger"
 )
 
-type Repo interface {
-	Update(metric *domain.Metric) error
-	GetMetricsList() []*domain.Metric
+type Storage interface {
+    Update(metric *domain.Metric) error
+    GetMetricsList() ([]*domain.Metric, error)
+    UpdateMetrics(metrics []*domain.Metric) error
+}
+
+type Config struct {
+    serverAddr     string
+    pollInterval   time.Duration
+    reportInterval time.Duration
 }
 
 type Service struct {
-	repo           Repo
-	stat           *domain.Statistics
-	serverAddr     string
-	pollInterval   time.Duration
-	reportInterval time.Duration
+    storage Storage
+    logger  logger.Logger
+    config  Config
 }
 
-func NewAgentService(
-	pollInterval time.Duration,
-	reportInterval time.Duration,
-	serverAddr string,
-) *Service {
-	repo := repository.NewInMemStorage()
+type Option func(*Service)
 
-	return &Service{
-		repo:           repo,
-		stat:           domain.NewStatistics(),
-		serverAddr:     serverAddr,
-		pollInterval:   pollInterval,
-		reportInterval: reportInterval,
-	}
+func NewAgentService(storage Storage, options ...Option) *Service {
+    service := &Service{
+        storage: storage,
+    }
+
+    for _, opt := range options {
+        opt(service)
+    }
+
+    return service
 }
 
-func (as *Service) StartPoller() {
-	log.Printf("Start poller with %d duration", as.pollInterval)
-
-	ticker := time.NewTicker(as.pollInterval)
-
-	for range ticker.C {
-		as.stat.Refresh()
-
-		for name, value := range as.stat.CurrentValues {
-			metric := domain.NewGauge(name, value)
-			if err := as.repo.Update(metric); err != nil {
-				log.Fatalf("%v", err)
-			}
-		}
-
-		pollCountMetric := domain.NewCounter("PollCount", 1)
-		if err := as.repo.Update(pollCountMetric); err != nil {
-			log.Fatalf("%v", err)
-		}
-	}
+func WithLogger(logger logger.Logger) Option {
+    return func(service *Service) {
+        service.logger = logger
+    }
 }
 
-func (as *Service) StartReporter() {
-	log.Printf("Start reporter with %d duration", as.reportInterval)
-
-	ticker := time.NewTicker(as.reportInterval)
-
-	for range ticker.C {
-		for _, metric := range as.repo.GetMetricsList() {
-			if err := as.makeRequest(metric); err != nil {
-				log.Fatalf("%v", err)
-			}
-		}
-	}
+func WithAddress(serverAddr string) Option {
+    return func(service *Service) {
+        service.config.serverAddr = serverAddr
+    }
 }
 
-func (as *Service) makeRequest(metric *domain.Metric) error {
-	request, err := http.NewRequest(
-		http.MethodPost,
-		fmt.Sprintf(
-			"http://%s/update/%s/%s/%s",
-			as.serverAddr, metric.Type, metric.Name, metric,
-		),
-		nil,
-	)
-	if err != nil {
-		return fmt.Errorf("execute http request: %v", err)
-	}
+func WithPollInterval(pollInterval time.Duration) Option {
+    return func(service *Service) {
+        service.config.pollInterval = pollInterval
+    }
+}
 
-	request.Header.Set("Content-Type", "text/plain")
-
-	response, err := http.DefaultClient.Do(request)
-	if err != nil {
-		return err
-	}
-	defer response.Body.Close()
-
-	return nil
+func WithReportInterval(reportInterval time.Duration) Option {
+    return func(service *Service) {
+        service.config.reportInterval = reportInterval
+    }
 }

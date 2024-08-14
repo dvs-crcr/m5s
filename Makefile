@@ -7,10 +7,10 @@ build:
 	go build -o cmd/agent/agent cmd/agent/*.go
 
 run-server:
-	go run ./cmd/server/*.go
+	go run ./cmd/server/*.go -a localhost:44985 -i 0 -f tmp/storage
 
 run-agent:
-	go run ./cmd/server/*.go
+	go run ./cmd/agent/*.go -a localhost:44985
 
 .PHONY: all build run-server run-agent
 
@@ -62,6 +62,41 @@ metrics-test-5: build
 		-server-port=4485 \
 		-source-path=.
 
-autotest-sprint-1: static-test metrics-test-1 metrics-test-2 metrics-test-3 metrics-test-4 metrics-test-5
+autotest-sprint-1: static-test metrics-test-2 metrics-test-3 metrics-test-4 metrics-test-5
 
 .PHONY: static-test metrics-test-1 metrics-test-2 metrics-test-3 metrics-test-4 metrics-test-5 autotest-sprint-1
+
+# Sprint 2
+metrics-test-6: build
+	metricstest -test.v -test.run=^TestIteration6$ \
+		-agent-binary-path=cmd/agent/agent \
+		-binary-path=cmd/server/server \
+		-server-port=4485 \
+		-source-path=.
+
+metrics-test-7: build
+	export ADDRESS=localhost:8080; \
+	metricstest -test.v -test.run=^TestIteration7$ \
+		-agent-binary-path=cmd/agent/agent \
+		-binary-path=cmd/server/server \
+		-server-port=8080 \
+		-source-path=.
+
+metrics-test-8: build
+	metricstest -test.v -test.run=^TestIteration8$ \
+		-agent-binary-path=cmd/agent/agent \
+		-binary-path=cmd/server/server \
+		-server-port=4485 \
+		-source-path=.
+
+metrics-test-9: build
+	metricstest -test.v -test.run=^TestIteration9$ \
+		-agent-binary-path=cmd/agent/agent \
+		-binary-path=cmd/server/server \
+		-file-storage-path=tmp/tmp-storage \
+		-server-port=4485 \
+		-source-path=.
+
+autotest-sprint-2: static-test metrics-test-6 metrics-test-7 metrics-test-8 metrics-test-9
+
+.PHONY: metrics-test-6 metrics-test-7 metrics-test-8 metrics-test-9

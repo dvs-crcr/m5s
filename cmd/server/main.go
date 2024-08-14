@@ -1,32 +1,80 @@
 package main
 
 import (
-	"log"
-	"net/http"
+    "log"
+    "net/http"
+    "time"
 
-	"github.com/go-chi/chi/v5"
+    "github.com/go-chi/chi/v5"
 
-	"m5s/internal/api"
+    "m5s/internal/api/handlers"
+    "m5s/internal/api/middleware"
+    "m5s/internal/server"
+    "m5s/internal/storage"
+    internalLogger "m5s/pkg/logger"
+    "m5s/pkg/logger/providers"
 )
 
 func main() {
-	config := NewDefaultConfig()
-	config.parseVariables()
+    config := NewDefaultConfig()
+    if err := config.parseVariables(); err != nil {
+        log.Fatal(err)
+    }
 
-	if err := execute(config); err != nil {
-		log.Fatal(err)
-	}
+    if err := execute(config); err != nil {
+        log.Fatal(err)
+    }
 }
 
 func execute(cfg *Config) error {
-	apiHandler := api.NewHandler()
+    // Init logger
+    loggerProvider := providers.NewZapProvider()
+    logger := internalLogger.NewLogger(
+        internalLogger.WithProvider(loggerProvider),
+        internalLogger.WithLogLevel(cfg.LogLevel),
+    )
 
-	r := chi.NewRouter()
+    serverService := server.NewServerService(
+        storage.NewMemStorage(),
+        server.WithLogger(logger),
+        server.WithStorage(
+            cfg.Restore,
+            cfg.FileStoragePath,
+            time.Duration(cfg.StoreInterval)*time.Second,
+        ),
+    )
 
-	r.Get("/", apiHandler.GetMetricsList)
-	r.Post("/update/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
-	r.Get("/value/{metricType}/{metricName}", apiHandler.GetMetric)
+    apiHandler := handlers.NewHandler(
+        serverService,
+        handlers.WithLogger(logger),
+    )
 
-	log.Printf("Running server on %s", cfg.Addr)
-	return http.ListenAndServe(cfg.Addr, r)
+    apiMiddleware := middleware.NewMiddleware(logger)
+
+    r := chi.NewRouter()
+
+    // Middlewares
+    r.Use(apiMiddleware.WithRequestLogger)
+    r.Use(middleware.WithCompression)
+
+    // Routes
+    r.Route("/", func(r chi.Router) {
+        r.Get("/", apiHandler.GetMetricsList)
+
+        r.Route("/update", func(r chi.Router) {
+            r.Post("/", apiHandler.UpdateJSON)
+            r.Post("/{metricType}/{metricName}/{metricValue}", apiHandler.Update)
+        })
+
+        r.Route("/value", func(r chi.Router) {
+            r.Post("/", apiHandler.GetMetricJSON)
+            r.Get("/{metricType}/{metricName}", apiHandler.GetMetric)
+        })
+    })
+
+    logger.Info(
+        "starting server",
+        "config", cfg,
+    )
+    return http.ListenAndServe(cfg.Addr, r)
 }
