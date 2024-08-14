@@ -1,10 +1,12 @@
 package server
 
 import (
+    "context"
+    "errors"
     "time"
 
     "m5s/domain"
-    "m5s/internal/repository"
+    "m5s/internal/storage"
     "m5s/pkg/logger"
 )
 
@@ -20,23 +22,35 @@ type Storage interface {
     UpdateMetrics(metrics []*domain.Metric) error
 }
 
+type Database interface {
+    Ping(ctx context.Context) error
+}
+
+var (
+    ErrDatabaseNoInit = errors.New(
+        "database instance has not been initialized",
+    )
+)
+
 type Config struct {
     storeInterval time.Duration
     restore       bool
 }
 
 type Service struct {
-    repo    Repo
-    storage Storage
-    logger  logger.Logger
-    config  Config
+    repo     Repo
+    storage  Storage
+    database Database
+    logger   logger.Logger
+    config   Config
 }
 
 type Option func(*Service)
 
 func NewServerService(repo Repo, options ...Option) *Service {
     service := &Service{
-        repo: repo,
+        repo:     repo,
+        database: nil,
     }
 
     for _, opt := range options {
@@ -63,9 +77,26 @@ func WithStoreInterval(storeInterval time.Duration) Option {
     }
 }
 
-func WithStorage(fileStoragePath string) Option {
+func WithFileStorage(fileStoragePath string) Option {
     return func(service *Service) {
-        service.storage = repository.NewInFileStorage(fileStoragePath)
+        service.storage = storage.NewFileStorage(fileStoragePath)
+    }
+}
+
+func WithDatabaseStorage(ctx context.Context, dsn string) Option {
+    return func(service *Service) {
+        var err error
+
+        if dsn == "" {
+            return
+        }
+
+        if service.database, err = storage.NewDBStorage(ctx, dsn); err != nil {
+            service.logger.Error(
+                "unable to connect to database",
+                "error", err,
+            )
+        }
     }
 }
 
@@ -176,7 +207,7 @@ func (ss *Service) RestoreMetrics() {
     )
 
     if err := ss.repo.UpdateMetrics(storageMetrics); err != nil {
-        ss.logger.Error(err.Error())
+        ss.logger.Error("update metrics", "error", err)
     }
 }
 
@@ -188,4 +219,12 @@ func (ss *Service) BackupMetrics() error {
     }
 
     return nil
+}
+
+func (ss *Service) PingDB(ctx context.Context) error {
+    if ss.database == nil {
+        return ErrDatabaseNoInit
+    }
+
+    return ss.database.Ping(ctx)
 }

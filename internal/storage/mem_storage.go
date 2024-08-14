@@ -1,4 +1,4 @@
-package repository
+package storage
 
 import (
     "fmt"
@@ -7,18 +7,18 @@ import (
     "m5s/domain"
 )
 
-type InMemStorage struct {
+type MemStorage struct {
     sync.RWMutex
     store map[string]*domain.Metric
 }
 
-func NewInMemStorage() *InMemStorage {
-    return &InMemStorage{
+func NewMemStorage() *MemStorage {
+    return &MemStorage{
         store: make(map[string]*domain.Metric),
     }
 }
 
-func (ims *InMemStorage) Update(metric *domain.Metric) error {
+func (ims *MemStorage) Update(metric *domain.Metric) error {
     ims.Lock()
     defer ims.Unlock()
 
@@ -42,7 +42,7 @@ func (ims *InMemStorage) Update(metric *domain.Metric) error {
     return nil
 }
 
-func (ims *InMemStorage) UpdateMetrics(metrics []*domain.Metric) error {
+func (ims *MemStorage) UpdateMetrics(metrics []*domain.Metric) error {
     for _, metric := range metrics {
         if err := ims.Update(metric); err != nil {
             return fmt.Errorf("unable to restore metric: %v: %w", metric, err)
@@ -52,7 +52,7 @@ func (ims *InMemStorage) UpdateMetrics(metrics []*domain.Metric) error {
     return nil
 }
 
-func (ims *InMemStorage) GetMetric(
+func (ims *MemStorage) GetMetric(
     metricType domain.MetricType,
     name string,
 ) (*domain.Metric, error) {
@@ -75,7 +75,7 @@ func (ims *InMemStorage) GetMetric(
     return metric, nil
 }
 
-func (ims *InMemStorage) GetMetricsList() []*domain.Metric {
+func (ims *MemStorage) GetMetricsList() []*domain.Metric {
     ims.RLock()
     defer ims.RUnlock()
 

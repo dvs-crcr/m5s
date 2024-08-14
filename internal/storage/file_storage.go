@@ -1,4 +1,4 @@
-package repository
+package storage
 
 import (
     "encoding/json"
@@ -8,17 +8,17 @@ import (
     "m5s/domain"
 )
 
-type InFileStorage struct {
+type FileStorage struct {
     fileStoragePath string
 }
 
-func NewInFileStorage(fileStoragePath string) *InFileStorage {
-    return &InFileStorage{
+func NewFileStorage(fileStoragePath string) *FileStorage {
+    return &FileStorage{
         fileStoragePath: fileStoragePath,
     }
 }
 
-func (ifs *InFileStorage) UpdateMetrics(metrics []*domain.Metric) error {
+func (ifs *FileStorage) UpdateMetrics(metrics []*domain.Metric) error {
     metricsBytes, err := json.Marshal(metrics)
     if err != nil {
         return err
@@ -45,7 +45,7 @@ func (ifs *InFileStorage) UpdateMetrics(metrics []*domain.Metric) error {
     return nil
 }
 
-func (ifs *InFileStorage) GetMetricsList() ([]*domain.Metric, error) {
+func (ifs *FileStorage) GetMetricsList() ([]*domain.Metric, error) {
     metrics := make([]*domain.Metric, 0)
 
     fileBytes, err := os.ReadFile(ifs.fileStoragePath)

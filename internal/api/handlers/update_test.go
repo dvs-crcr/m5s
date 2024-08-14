@@ -11,12 +11,12 @@ import (
     "github.com/go-chi/chi/v5"
     "github.com/stretchr/testify/assert"
 
-    "m5s/internal/repository"
     "m5s/internal/server"
+    "m5s/internal/storage"
 )
 
 func TestHandler_Update(t *testing.T) {
-    serverRepository := repository.NewInMemStorage()
+    serverRepository := storage.NewMemStorage()
     serverService := server.NewServerService(
         serverRepository,
     )
@@ -131,7 +131,7 @@ func TestHandler_Update(t *testing.T) {
 }
 
 func TestHandler_UpdateJSON(t *testing.T) {
-    serverRepository := repository.NewInMemStorage()
+    serverRepository := storage.NewMemStorage()
     serverService := server.NewServerService(
         serverRepository,
     )

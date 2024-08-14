@@ -12,12 +12,12 @@ import (
     "github.com/stretchr/testify/assert"
 
     "m5s/domain"
-    "m5s/internal/repository"
     "m5s/internal/server"
+    "m5s/internal/storage"
 )
 
 func TestHandler_GetMetric(t *testing.T) {
-    serverRepository := repository.NewInMemStorage()
+    serverRepository := storage.NewMemStorage()
     serverService := server.NewServerService(
         serverRepository,
     )
@@ -138,7 +138,7 @@ func TestHandler_GetMetric(t *testing.T) {
 }
 
 func TestHandler_GetMetricJSON(t *testing.T) {
-    serverRepository := repository.NewInMemStorage()
+    serverRepository := storage.NewMemStorage()
     serverService := server.NewServerService(
         serverRepository,
     )
@@ -275,7 +275,7 @@ func TestHandler_GetMetricJSON(t *testing.T) {
 }
 
 func TestHandler_GetMetricsList(t *testing.T) {
-    serverRepository := repository.NewInMemStorage()
+    serverRepository := storage.NewMemStorage()
     serverService := server.NewServerService(
         serverRepository,
     )

@@ -41,7 +41,7 @@ func (h *Handler) UpdateJSON(w http.ResponseWriter, r *http.Request) {
 
     bodyData, err := io.ReadAll(r.Body)
     if err != nil {
-        h.logger.Error(err.Error())
+        h.logger.Error("read body", "error", err)
 
         return
     }

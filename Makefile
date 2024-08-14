@@ -7,7 +7,11 @@ build:
 	go build -o cmd/agent/agent cmd/agent/*.go
 
 run-server:
-	go run ./cmd/server/*.go -a localhost:44985 -i 10 -f tmp/storage
+	go run ./cmd/server/*.go \
+		-a localhost:44985 \
+		-i 10 \
+		-f tmp/storage \
+		-d "postgres://postgres:postgres@127.0.0.1:9900/praktikum?sslmode=disable"
 
 run-agent:
 	go run ./cmd/agent/*.go -a localhost:44985
@@ -107,7 +111,7 @@ metrics-test-10: build
 	metricstest -test.v -test.run=^TestIteration10[AB]$ \
 		-agent-binary-path=cmd/agent/agent \
 		-binary-path=cmd/server/server \
-		-database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable' \
+		-database-dsn='postgres://postgres:postgres@127.0.0.1:9900/praktikum?sslmode=disable' \
 		-server-port=4485 \
 		-source-path=.
 
@@ -116,7 +120,7 @@ metrics-test-11: build
 	metricstest -test.v -test.run=^TestIteration11$ \
 		-agent-binary-path=cmd/agent/agent \
 		-binary-path=cmd/server/server \
-		-database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable' \
+		-database-dsn='postgres://postgres:postgres@postgres:9900/praktikum?sslmode=disable' \
 		-server-port=4485 \
 		-source-path=.
 
@@ -125,7 +129,7 @@ metrics-test-12: build
 	metricstest -test.v -test.run=^TestIteration12$ \
 		-agent-binary-path=cmd/agent/agent \
 		-binary-path=cmd/server/server \
-		-database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable' \
+		-database-dsn='postgres://postgres:postgres@postgres:9900/praktikum?sslmode=disable' \
 		-server-port=4485 \
 		-source-path=.
 
@@ -134,7 +138,7 @@ metrics-test-13: build
 	metricstest -test.v -test.run=^TestIteration13$ \
 		-agent-binary-path=cmd/agent/agent \
 		-binary-path=cmd/server/server \
-		-database-dsn='postgres://postgres:postgres@postgres:5432/praktikum?sslmode=disable' \
+		-database-dsn='postgres://postgres:postgres@postgres:9900/praktikum?sslmode=disable' \
 		-server-port=4485 \
 		-source-path=.
 

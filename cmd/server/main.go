@@ -1,6 +1,7 @@
 package main
 
 import (
+    "context"
     "log"
     "net/http"
     "time"
@@ -9,8 +10,8 @@ import (
 
     "m5s/internal/api/handlers"
     "m5s/internal/api/middleware"
-    "m5s/internal/repository"
     "m5s/internal/server"
+    "m5s/internal/storage"
     internalLogger "m5s/pkg/logger"
     "m5s/pkg/logger/providers"
 )
@@ -27,6 +28,8 @@ func main() {
 }
 
 func execute(cfg *Config) error {
+    ctx := context.Background()
+
     // Init logger
     loggerProvider := providers.NewZapProvider()
     logger := internalLogger.NewLogger(
@@ -34,13 +37,14 @@ func execute(cfg *Config) error {
         internalLogger.WithLogLevel(cfg.LogLevel),
     )
 
-    serverRepository := repository.NewInMemStorage()
+    serverRepository := storage.NewMemStorage()
 
     serverService := server.NewServerService(
         serverRepository,
         server.WithLogger(logger),
         server.WithStoreInterval(time.Duration(cfg.StoreInterval)*time.Second),
-        server.WithStorage(cfg.FileStoragePath),
+        server.WithFileStorage(cfg.FileStoragePath),
+        server.WithDatabaseStorage(ctx, cfg.DatabaseDSN),
         server.WithRestore(cfg.Restore),
     )
 
@@ -60,6 +64,8 @@ func execute(cfg *Config) error {
     // Routes
     r.Route("/", func(r chi.Router) {
         r.Get("/", apiHandler.GetMetricsList)
+
+        r.Get("/ping", apiHandler.Ping)
 
         r.Route("/update", func(r chi.Router) {
             r.Post("/", apiHandler.UpdateJSON)
