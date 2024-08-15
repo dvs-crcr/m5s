@@ -16,7 +16,8 @@ var (
 type MetricType int
 
 const (
-    MetricTypeGauge MetricType = iota
+    MetricTypeUnknown MetricType = iota
+    MetricTypeGauge
     MetricTypeCounter
 )
 
@@ -28,7 +29,18 @@ type Metric struct {
 }
 
 func (mt MetricType) String() string {
-    return [...]string{"gauge", "counter"}[mt]
+    return [...]string{"unknown", "gauge", "counter"}[mt]
+}
+
+func ParseMetricType(strMetricType string) (MetricType, error) {
+    switch strMetricType {
+    case "gauge", "GAUGE":
+        return MetricTypeGauge, nil
+    case "counter", "COUNTER":
+        return MetricTypeCounter, nil
+    default:
+        return MetricTypeUnknown, ErrInvalidMetricType
+    }
 }
 
 // NewMetric uses to create new Metric instance.
@@ -37,34 +49,29 @@ func NewMetric(
     name string,
     value string,
 ) (*Metric, error) {
-    switch metricType {
-    case MetricTypeCounter.String():
+    mt, err := ParseMetricType(metricType)
+    if err != nil {
+        return nil, err
+    }
+
+    switch mt {
+    case MetricTypeCounter:
         parsedValue, err := validateCounter(name, value)
         if err != nil {
             return nil, err
         }
 
-        return &Metric{
-            Name:       name,
-            Type:       MetricTypeCounter,
-            FloatValue: 0,
-            IntValue:   parsedValue,
-        }, nil
-    case MetricTypeGauge.String():
+        return NewCounter(name, parsedValue), nil
+    case MetricTypeGauge:
         parsedValue, err := validateGauge(name, value)
         if err != nil {
             return nil, err
         }
 
-        return &Metric{
-            Name:       name,
-            Type:       MetricTypeGauge,
-            FloatValue: parsedValue,
-            IntValue:   0,
-        }, nil
+        return NewGauge(name, parsedValue), nil
+    default:
+        return nil, ErrInvalidMetricType
     }
-
-    return nil, ErrInvalidMetricType
 }
 
 func NewGauge(name string, value float64) *Metric {
@@ -85,7 +92,7 @@ func NewCounter(name string, value int64) *Metric {
     }
 }
 
-func (m *Metric) Value() string {
+func (m Metric) Value() string {
     switch m.Type {
     case MetricTypeGauge:
         return strconv.FormatFloat(m.FloatValue, 'g', -1, 64)
@@ -96,7 +103,7 @@ func (m *Metric) Value() string {
     }
 }
 
-func (m *Metric) String() string {
+func (m Metric) String() string {
     return fmt.Sprintf(
         "%s(%s)=%s\n", m.Name, m.Type, m.Value(),
     )

@@ -7,7 +7,9 @@ import (
 )
 
 func (h *Handler) Ping(w http.ResponseWriter, r *http.Request) {
-    if err := h.serverService.PingDB(r.Context()); err != nil {
+    ctx := r.Context()
+
+    if err := h.serverService.PingDB(ctx); err != nil {
         api.HandleErrors(api.ErrInternal, w)
 
         return

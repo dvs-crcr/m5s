@@ -1,6 +1,7 @@
 package agent
 
 import (
+    "context"
     "time"
 
     "m5s/domain"
@@ -8,9 +9,9 @@ import (
 )
 
 type Storage interface {
-    Update(metric *domain.Metric) error
-    GetMetricsList() ([]*domain.Metric, error)
-    UpdateMetrics(metrics []*domain.Metric) error
+    Update(ctx context.Context, metric *domain.Metric) error
+    GetMetricsList(ctx context.Context) ([]*domain.Metric, error)
+    UpdateMetrics(ctx context.Context, metrics []*domain.Metric) error
 }
 
 type Config struct {

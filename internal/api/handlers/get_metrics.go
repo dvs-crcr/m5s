@@ -12,12 +12,14 @@ import (
 )
 
 func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
+    ctx := r.Context()
+
     w.Header().Set("Content-Type", "text/plain")
 
     metricType := chi.URLParam(r, "metricType")
     metricName := chi.URLParam(r, "metricName")
 
-    metricValue, err := h.serverService.GetMetricValue(metricType, metricName)
+    metricValue, err := h.serverService.GetMetricValue(ctx, metricType, metricName)
     if err != nil {
         api.HandleErrors(err, w)
 
@@ -29,6 +31,8 @@ func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetMetricJSON(w http.ResponseWriter, r *http.Request) {
+    ctx := r.Context()
+
     if !api.CheckContentType(
         r.Header.Get("Content-Type"),
         "application/json",
@@ -47,7 +51,7 @@ func (h *Handler) GetMetricJSON(w http.ResponseWriter, r *http.Request) {
         return
     }
 
-    domainMetric, err := h.serverService.GetMetric(metric.MType, metric.ID)
+    domainMetric, err := h.serverService.GetMetric(ctx, metric.MType, metric.ID)
     if err != nil {
         api.HandleErrors(err, w)
 
@@ -82,9 +86,11 @@ func (h *Handler) GetMetricJSON(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) GetMetricsList(w http.ResponseWriter, r *http.Request) {
+    ctx := r.Context()
+
     w.Header().Set("Content-Type", "text/html")
 
-    metricsList := h.serverService.GetMetricsList()
+    metricsList := h.serverService.GetMetricsList(ctx)
 
     w.WriteHeader(http.StatusOK)
     w.Write([]byte(metricsList))

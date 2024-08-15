@@ -19,7 +19,7 @@ func TestMiddleware_WithCompression(t *testing.T) {
         "version": "1.0"
     }`
 
-    srv := httptest.NewServer(
+    testServer := httptest.NewServer(
         WithCompression(
             http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
                 w.Header().Set("Content-Type", "application/json")
@@ -28,7 +28,7 @@ func TestMiddleware_WithCompression(t *testing.T) {
             }),
         ),
     )
-    defer srv.Close()
+    defer testServer.Close()
 
     requestBody := `{
         "request": {
@@ -46,7 +46,7 @@ func TestMiddleware_WithCompression(t *testing.T) {
         err = zb.Close()
         require.NoError(t, err)
 
-        r := httptest.NewRequest("POST", srv.URL, buf)
+        r := httptest.NewRequest("POST", testServer.URL, buf)
         r.RequestURI = ""
         r.Header.Set("Content-Encoding", "gzip")
 
@@ -63,7 +63,7 @@ func TestMiddleware_WithCompression(t *testing.T) {
 
     t.Run("positive__accepts_gzip", func(t *testing.T) {
         buf := bytes.NewBufferString(requestBody)
-        r := httptest.NewRequest("POST", srv.URL, buf)
+        r := httptest.NewRequest("POST", testServer.URL, buf)
         r.RequestURI = ""
         r.Header.Set("Content-Type", "application/json")
         r.Header.Set("Accept-Encoding", "gzip")

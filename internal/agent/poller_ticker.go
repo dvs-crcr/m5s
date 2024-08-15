@@ -1,6 +1,7 @@
 package agent
 
 import (
+    "context"
     "math/rand"
     "runtime"
     "time"
@@ -8,7 +9,7 @@ import (
     "m5s/domain"
 )
 
-func (as *Service) StartPollTicker() {
+func (as *Service) StartPollTicker(ctx context.Context) {
     as.logger.Info(
         "starting poll ticker",
         "pollInterval", as.config.pollInterval,
@@ -27,7 +28,7 @@ func (as *Service) StartPollTicker() {
 
         metrics = append(metrics, domain.NewCounter("PollCount", 1))
 
-        if err := as.storage.UpdateMetrics(metrics); err != nil {
+        if err := as.storage.UpdateMetrics(ctx, metrics); err != nil {
             as.logger.Error("update agent metrics", "error", err)
         }
     }

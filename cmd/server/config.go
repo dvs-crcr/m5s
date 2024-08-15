@@ -10,7 +10,7 @@ var (
     DefaultLogLevel                      = "info"
     DefaultAddress                       = "localhost:8080"
     DefaultStoreInterval           int64 = 300
-    DefaultFileStoragePath               = "tmp/file_storage"
+    DefaultFileStoragePath               = ""
     DefaultDatabaseDSN                   = ""
     DefaultMigrationsPath                = "migrations"
     DefaultMigrationsSchemaVersion       = ""

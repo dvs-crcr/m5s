@@ -1,4 +1,4 @@
-package storage
+package databaseStorage
 
 import (
     "context"
@@ -16,7 +16,6 @@ import (
 
 type DBStorage struct {
     pool           *pgxpool.Pool
-    storageType    StorageType
     migrationsPath string
 }
 
@@ -29,7 +28,6 @@ func NewDBStorage(
     migrationsSchemaVersion int32,
 ) (*DBStorage, error) {
     dbStorage := &DBStorage{
-        storageType:    TypeDatabase,
         migrationsPath: migrationsPath,
     }
 
@@ -106,30 +104,55 @@ func ParseMigrationVersion(migrationsVersion string) int32 {
     return int32(msv)
 }
 
-func (ids *DBStorage) MyType() StorageType {
-    return ids.storageType
-}
-
 func (ids *DBStorage) Ping(ctx context.Context) error {
     return ids.pool.Ping(ctx)
 }
 
-func (ids *DBStorage) Update(metric *domain.Metric) error {
+func (ids *DBStorage) Update(ctx context.Context, metric *domain.Metric) error {
     //TODO implement me
     panic("implement me 1")
 }
 
-func (ids *DBStorage) GetMetric(metricType domain.MetricType, name string) (*domain.Metric, error) {
+func (ids *DBStorage) GetMetric(ctx context.Context, metricType domain.MetricType, name string) (*domain.Metric, error) {
     //TODO implement me
     panic("implement me 2")
 }
 
-func (ids *DBStorage) GetMetricsList() ([]*domain.Metric, error) {
-    //TODO implement me
-    panic("implement me 3")
+func (ids *DBStorage) GetMetricsList(ctx context.Context) ([]*domain.Metric, error) {
+    fmt.Println("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
+
+    metrics := make([]*domain.Metric, 0)
+
+    rows, err := ids.pool.Query(
+        ctx,
+        `SELECT
+            id,
+            metric_type,
+            delta,
+            value
+        FROM metrics.metrics;`)
+    if err != nil {
+        return nil, err
+    }
+
+    for rows.Next() {
+        var row *domain.Metric
+
+        if err := rows.Scan(
+            &row.Name, &row.Type, &row.FloatValue, &row.IntValue,
+        ); err != nil {
+            return nil, err
+        }
+
+        metrics = append(metrics, row)
+    }
+
+    fmt.Println("AAAAAAAAAAAAAAAAAAAA", metrics)
+
+    return metrics, err
 }
 
-func (ids *DBStorage) UpdateMetrics(metrics []*domain.Metric) error {
+func (ids *DBStorage) UpdateMetrics(ctx context.Context, metrics []*domain.Metric) error {
     //TODO implement me
     panic("implement me 4")
 }

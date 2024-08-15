@@ -3,6 +3,7 @@ package agent
 import (
     "bytes"
     "compress/gzip"
+    "context"
     "encoding/json"
     "fmt"
     "net/http"
@@ -12,7 +13,7 @@ import (
     "m5s/internal/models"
 )
 
-func (as *Service) StartReportTicker() {
+func (as *Service) StartReportTicker(ctx context.Context) {
     var client = &http.Client{
         Timeout: time.Second * 1,
         Transport: &http.Transport{
@@ -28,7 +29,7 @@ func (as *Service) StartReportTicker() {
     ticker := time.NewTicker(as.config.reportInterval)
 
     for range ticker.C {
-        metricsList, err := as.storage.GetMetricsList()
+        metricsList, err := as.storage.GetMetricsList(ctx)
         if err != nil {
             as.logger.Error("get metrics list", "error", err)
         }

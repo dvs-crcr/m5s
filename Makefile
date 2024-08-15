@@ -8,10 +8,10 @@ build:
 
 run-server:
 	go run ./cmd/server/*.go \
-		-a localhost:44985 \
+		-a localhost:44985
 		-i 10 \
-		-f tmp/storage \
-		-d "postgres://postgres:postgres@127.0.0.1:9900/praktikum?sslmode=disable"
+		-f tmp/storage
+#		-d "postgres://postgres:postgres@127.0.0.1:9900/praktikum?sslmode=disable"
 
 run-agent:
 	go run ./cmd/agent/*.go -a localhost:44985

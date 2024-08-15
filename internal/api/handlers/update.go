@@ -12,13 +12,15 @@ import (
 )
 
 func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+    ctx := r.Context()
+
     w.Header().Set("Content-Type", "text/plain")
 
     metricType := chi.URLParam(r, "metricType")
     metricName := chi.URLParam(r, "metricName")
     metricValue := chi.URLParam(r, "metricValue")
 
-    if err := h.serverService.Update(metricType, metricName, metricValue); err != nil {
+    if err := h.serverService.Update(ctx, metricType, metricName, metricValue); err != nil {
         api.HandleErrors(err, w)
 
         return
@@ -28,6 +30,8 @@ func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateJSON(w http.ResponseWriter, r *http.Request) {
+    ctx := r.Context()
+
     if !api.CheckContentType(
         r.Header.Get("Content-Type"),
         "application/json",
@@ -53,6 +57,7 @@ func (h *Handler) UpdateJSON(w http.ResponseWriter, r *http.Request) {
     }
 
     if err := h.serverService.Update(
+        ctx,
         metric.MType,
         metric.ID,
         metric.String(),

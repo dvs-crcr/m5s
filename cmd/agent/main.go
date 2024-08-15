@@ -1,6 +1,7 @@
 package main
 
 import (
+    "context"
     "log"
     "os"
     "os/signal"
@@ -8,7 +9,7 @@ import (
     "time"
 
     "m5s/internal/agent"
-    "m5s/internal/storage"
+    memoryStorage "m5s/internal/storage/memory_storage"
 
     internalLogger "m5s/pkg/logger"
     "m5s/pkg/logger/providers"
@@ -24,6 +25,8 @@ func main() {
 }
 
 func execute(cfg *Config) {
+    ctx := context.Background()
+
     loggerProvider := providers.NewZapProvider()
     logger := internalLogger.NewLogger(
         internalLogger.WithProvider(loggerProvider),
@@ -35,18 +38,18 @@ func execute(cfg *Config) {
         "config", cfg,
     )
 
-    serverRepository := storage.NewMemStorage()
+    agentStorage := memoryStorage.NewMemStorage()
 
     agentService := agent.NewAgentService(
-        serverRepository,
+        agentStorage,
         agent.WithLogger(logger),
         agent.WithAddress(cfg.Addr),
         agent.WithPollInterval(time.Duration(cfg.PollInterval)*time.Second),
         agent.WithReportInterval(time.Duration(cfg.ReportInterval)*time.Second),
     )
 
-    go agentService.StartPollTicker()
-    go agentService.StartReportTicker()
+    go agentService.StartPollTicker(ctx)
+    go agentService.StartReportTicker(ctx)
 
     signalChannel := make(chan os.Signal, 1)
     signal.Notify(signalChannel, syscall.SIGINT, syscall.SIGTERM)

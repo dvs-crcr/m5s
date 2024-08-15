@@ -11,7 +11,6 @@ import (
     "m5s/internal/api/handlers"
     "m5s/internal/api/middleware"
     "m5s/internal/server"
-    "m5s/internal/storage"
     internalLogger "m5s/pkg/logger"
     "m5s/pkg/logger/providers"
 )
@@ -38,7 +37,6 @@ func execute(cfg *Config) error {
     )
 
     serverService := server.NewServerService(
-        storage.NewMemStorage(),
         server.WithLogger(logger),
         server.WithStorage(
             ctx,

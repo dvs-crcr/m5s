@@ -1,4 +1,4 @@
-package storage
+package memoryStorage
 
 import (
     "context"
@@ -10,22 +10,16 @@ import (
 
 type MemStorage struct {
     sync.RWMutex
-    store       map[string]*domain.Metric
-    storageType StorageType
+    store map[string]*domain.Metric
 }
 
 func NewMemStorage() *MemStorage {
     return &MemStorage{
-        store:       make(map[string]*domain.Metric),
-        storageType: TypeMemory,
+        store: make(map[string]*domain.Metric),
     }
 }
 
-func (ims *MemStorage) MyType() StorageType {
-    return ims.storageType
-}
-
-func (ims *MemStorage) Update(metric *domain.Metric) error {
+func (ims *MemStorage) Update(_ context.Context, metric *domain.Metric) error {
     ims.Lock()
     defer ims.Unlock()
 
@@ -49,9 +43,9 @@ func (ims *MemStorage) Update(metric *domain.Metric) error {
     return nil
 }
 
-func (ims *MemStorage) UpdateMetrics(metrics []*domain.Metric) error {
+func (ims *MemStorage) UpdateMetrics(ctx context.Context, metrics []*domain.Metric) error {
     for _, metric := range metrics {
-        if err := ims.Update(metric); err != nil {
+        if err := ims.Update(ctx, metric); err != nil {
             return fmt.Errorf("unable to restore metric: %v: %w", metric, err)
         }
     }
@@ -60,6 +54,7 @@ func (ims *MemStorage) UpdateMetrics(metrics []*domain.Metric) error {
 }
 
 func (ims *MemStorage) GetMetric(
+    _ context.Context,
     metricType domain.MetricType,
     name string,
 ) (*domain.Metric, error) {
@@ -82,7 +77,7 @@ func (ims *MemStorage) GetMetric(
     return metric, nil
 }
 
-func (ims *MemStorage) GetMetricsList() ([]*domain.Metric, error) {
+func (ims *MemStorage) GetMetricsList(_ context.Context) ([]*domain.Metric, error) {
     ims.RLock()
     defer ims.RUnlock()
 
@@ -95,6 +90,7 @@ func (ims *MemStorage) GetMetricsList() ([]*domain.Metric, error) {
     return metrics, nil
 }
 
+// Ping - storage interface stub
 func (ims *MemStorage) Ping(_ context.Context) error {
     return nil
 }
