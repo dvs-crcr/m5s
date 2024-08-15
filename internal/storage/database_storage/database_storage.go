@@ -1,4 +1,4 @@
-package databaseStorage
+package databasestorage
 
 import (
     "context"
@@ -204,7 +204,7 @@ func (ids *DBStorage) UpdateMetrics(ctx context.Context, metrics []*domain.Metri
     `
 
     for _, metric := range metrics {
-        batch.Queue(query, metric.Name, metric.Type.String(), metric.IntValue, metric.FloatValue, )
+        batch.Queue(query, metric.Name, metric.Type.String(), metric.IntValue, metric.FloatValue)
     }
 
     br := ids.pool.SendBatch(ctx, batch)

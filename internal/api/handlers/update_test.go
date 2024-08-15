@@ -12,14 +12,14 @@ import (
     "github.com/stretchr/testify/require"
 
     "m5s/internal/server"
-    memoryStorage "m5s/internal/storage/memory_storage"
+    memorystorage "m5s/internal/storage/memory_storage"
     internalLogger "m5s/pkg/logger"
 )
 
 func TestHandler_Update(t *testing.T) {
     logger := internalLogger.NewLogger()
 
-    serverStorage := memoryStorage.NewMemStorage(logger)
+    serverStorage := memorystorage.NewMemStorage(logger)
     serverService := server.NewServerService(serverStorage)
 
     handler := NewHandler(
@@ -124,7 +124,7 @@ func TestHandler_Update(t *testing.T) {
 func TestHandler_UpdateJSON(t *testing.T) {
     logger := internalLogger.NewLogger()
 
-    serverStorage := memoryStorage.NewMemStorage(logger)
+    serverStorage := memorystorage.NewMemStorage(logger)
     serverService := server.NewServerService(serverStorage)
 
     handler := NewHandler(

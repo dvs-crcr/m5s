@@ -12,9 +12,9 @@ import (
     "m5s/internal/api/handlers"
     "m5s/internal/api/middleware"
     "m5s/internal/server"
-    databaseStorage "m5s/internal/storage/database_storage"
-    fileStorage "m5s/internal/storage/file_storage"
-    memoryStorage "m5s/internal/storage/memory_storage"
+    databasestorage "m5s/internal/storage/database_storage"
+    filestorage "m5s/internal/storage/file_storage"
+    memorystorage "m5s/internal/storage/memory_storage"
     internalLogger "m5s/pkg/logger"
     "m5s/pkg/logger/providers"
 )
@@ -96,7 +96,7 @@ func selectServerStorage(ctx context.Context, logger internalLogger.Logger, cfg 
     case cfg.DatabaseDSN != "":
         var err error
 
-        serverStorage, err = databaseStorage.NewDBStorage(
+        serverStorage, err = databasestorage.NewDBStorage(
             ctx,
             logger,
             cfg.DatabaseDSN,
@@ -111,7 +111,7 @@ func selectServerStorage(ctx context.Context, logger internalLogger.Logger, cfg 
     case cfg.FileStoragePath != "":
         var err error
 
-        serverStorage, err = fileStorage.NewFileStorage(
+        serverStorage, err = filestorage.NewFileStorage(
             ctx,
             logger,
             cfg.FileStoragePath,
@@ -124,7 +124,7 @@ func selectServerStorage(ctx context.Context, logger internalLogger.Logger, cfg 
             )
         }
     default:
-        serverStorage = memoryStorage.NewMemStorage(logger)
+        serverStorage = memorystorage.NewMemStorage(logger)
     }
 
     return serverStorage, nil

@@ -9,7 +9,7 @@ import (
     "time"
 
     "m5s/internal/agent"
-    memoryStorage "m5s/internal/storage/memory_storage"
+    memorystorage "m5s/internal/storage/memory_storage"
 
     internalLogger "m5s/pkg/logger"
     "m5s/pkg/logger/providers"
@@ -38,7 +38,7 @@ func execute(cfg *Config) {
         "config", cfg,
     )
 
-    agentStorage := memoryStorage.NewMemStorage(logger)
+    agentStorage := memorystorage.NewMemStorage(logger)
 
     agentService := agent.NewAgentService(
         agentStorage,

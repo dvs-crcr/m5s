@@ -1,4 +1,4 @@
-package fileStorage
+package filestorage
 
 import (
     "context"
@@ -10,12 +10,12 @@ import (
     "time"
 
     "m5s/domain"
-    memoryStorage "m5s/internal/storage/memory_storage"
+    memorystorage "m5s/internal/storage/memory_storage"
     "m5s/pkg/logger"
 )
 
 type FileStorage struct {
-    cache           *memoryStorage.MemStorage
+    cache           *memorystorage.MemStorage
     fileStoragePath string
     storeInterval   time.Duration
     restore         bool
@@ -30,7 +30,7 @@ func NewFileStorage(
     restore bool,
 ) (*FileStorage, error) {
     ifs := &FileStorage{
-        cache:           memoryStorage.NewMemStorage(logger),
+        cache:           memorystorage.NewMemStorage(logger),
         logger:          logger,
         fileStoragePath: fileStoragePath,
         storeInterval:   storeInterval,

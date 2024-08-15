@@ -14,7 +14,7 @@ import (
 
     "m5s/domain"
     "m5s/internal/server"
-    memoryStorage "m5s/internal/storage/memory_storage"
+    memorystorage "m5s/internal/storage/memory_storage"
     internalLogger "m5s/pkg/logger"
 )
 
@@ -23,7 +23,7 @@ func TestHandler_GetMetric(t *testing.T) {
 
     logger := internalLogger.NewLogger()
 
-    serverStorage := memoryStorage.NewMemStorage(logger)
+    serverStorage := memorystorage.NewMemStorage(logger)
     serverService := server.NewServerService(serverStorage)
 
     _ = serverStorage.UpdateMetrics(
@@ -149,7 +149,7 @@ func TestHandler_GetMetricJSON(t *testing.T) {
 
     logger := internalLogger.NewLogger()
 
-    serverStorage := memoryStorage.NewMemStorage(logger)
+    serverStorage := memorystorage.NewMemStorage(logger)
     serverService := server.NewServerService(serverStorage)
 
     _ = serverStorage.Update(
@@ -291,7 +291,7 @@ func TestHandler_GetMetricsList(t *testing.T) {
 
     logger := internalLogger.NewLogger()
 
-    serverStorage := memoryStorage.NewMemStorage(logger)
+    serverStorage := memorystorage.NewMemStorage(logger)
     serverService := server.NewServerService(serverStorage)
 
     mockMetrics := []*domain.Metric{
