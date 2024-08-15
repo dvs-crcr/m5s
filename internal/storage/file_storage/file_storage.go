@@ -36,7 +36,7 @@ func NewFileStorage(
     if err := ifs.restoreMetrics(ctx); err != nil {
         return nil, fmt.Errorf("restore metrics: %w", err)
     }
-    //go ifs.startStoreTicker(ctx)
+    go ifs.startStoreTicker(ctx)
 
     return ifs, nil
 }

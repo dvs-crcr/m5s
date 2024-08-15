@@ -23,22 +23,22 @@ func (ims *MemStorage) Update(_ context.Context, metric *domain.Metric) error {
     ims.Lock()
     defer ims.Unlock()
 
-    if metric.Type == domain.MetricTypeCounter {
-        newValue := metric.IntValue
-
-        prevMetric, ok := ims.store[metric.Name]
-        if ok {
-            newValue += prevMetric.IntValue
-
-            metric.IntValue = newValue
-
-            ims.store[metric.Name] = metric
-
-            return nil
-        }
-    }
-
-    ims.store[metric.Name] = metric
+    //if metric.Type == domain.MetricTypeCounter {
+    //    newValue := metric.IntValue
+    //
+    //    prevMetric, ok := ims.store[metric.Name]
+    //    if ok {
+    //        newValue += prevMetric.IntValue
+    //
+    //        metric.IntValue = newValue
+    //
+    //        ims.store[metric.Name] = metric
+    //
+    //        return nil
+    //    }
+    //}
+    //
+    //ims.store[metric.Name] = metric
 
     return nil
 }
