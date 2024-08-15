@@ -66,16 +66,25 @@ func WithStorage(
     fileStoragePath string,
     storeInterval time.Duration,
     dsn string,
+    migrationsPath string,
+    migrationsVersion string,
 ) Option {
     return func(service *Service) {
-        var err error
-
         service.config.restore = restore
         service.config.storeInterval = storeInterval
 
         switch {
         case dsn != "":
-            service.storage, err = storage.NewDBStorage(ctx, dsn)
+            service.storage = storage.NewFileStorage(fileStoragePath)
+
+            var err error
+
+            _, err = storage.NewDBStorage(
+                ctx,
+                dsn,
+                migrationsPath,
+                storage.ParseMigrationVersion(migrationsVersion),
+            )
             if err != nil {
                 service.logger.Fatal(
                     "unable to create new db instance",

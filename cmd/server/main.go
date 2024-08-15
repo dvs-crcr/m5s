@@ -46,6 +46,8 @@ func execute(cfg *Config) error {
             cfg.FileStoragePath,
             time.Duration(cfg.StoreInterval)*time.Second,
             cfg.DatabaseDSN,
+            cfg.MigrationsPath,
+            cfg.MigrationsVersion,
         ),
     )
 

@@ -7,29 +7,36 @@ import (
 )
 
 var (
-    DefaultLogLevel              = "info"
-    DefaultAddress               = "localhost:8080"
-    DefaultStoreInterval   int64 = 300
-    DefaultFileStoragePath       = "tmp/file_storage"
+    DefaultLogLevel                      = "info"
+    DefaultAddress                       = "localhost:8080"
+    DefaultStoreInterval           int64 = 300
+    DefaultFileStoragePath               = "tmp/file_storage"
+    DefaultDatabaseDSN                   = ""
+    DefaultMigrationsPath                = "migrations"
+    DefaultMigrationsSchemaVersion       = ""
 )
 
 type Config struct {
-    LogLevel        string
-    Addr            string
-    StoreInterval   int64
-    FileStoragePath string
-    DatabaseDSN     string
-    Restore         bool
+    LogLevel          string
+    Addr              string
+    StoreInterval     int64
+    FileStoragePath   string
+    MigrationsPath    string
+    MigrationsVersion string
+    DatabaseDSN       string
+    Restore           bool
 }
 
 func NewDefaultConfig() *Config {
     return &Config{
-        LogLevel:        DefaultLogLevel,
-        Addr:            DefaultAddress,
-        StoreInterval:   DefaultStoreInterval,
-        FileStoragePath: DefaultFileStoragePath,
-        Restore:         true,
-        DatabaseDSN:     "",
+        LogLevel:          DefaultLogLevel,
+        Addr:              DefaultAddress,
+        StoreInterval:     DefaultStoreInterval,
+        FileStoragePath:   DefaultFileStoragePath,
+        MigrationsPath:    DefaultMigrationsPath,
+        MigrationsVersion: DefaultMigrationsSchemaVersion,
+        Restore:           true,
+        DatabaseDSN:       DefaultDatabaseDSN,
     }
 }
 
@@ -58,6 +65,10 @@ func (c *Config) parseVariables() error {
 
     flag.StringVar(
         &c.DatabaseDSN, "d", c.DatabaseDSN, "database DSN",
+    )
+
+    flag.StringVar(
+        &c.MigrationsPath, "m", c.MigrationsPath, "migrations folder",
     )
 
     flag.Parse()
@@ -92,6 +103,14 @@ func (c *Config) parseVariables() error {
 
     if dsnEnv := os.Getenv("DATABASE_DSN"); dsnEnv != "" {
         c.DatabaseDSN = dsnEnv
+    }
+
+    if migrationsPathEnv := os.Getenv("MIGRATIONS_PATH"); migrationsPathEnv != "" {
+        c.MigrationsPath = migrationsPathEnv
+    }
+
+    if migrationsVersionEnv := os.Getenv("MIGRATIONS_VERSION"); migrationsVersionEnv != "" {
+        c.MigrationsVersion = migrationsVersionEnv
     }
 
     return nil
