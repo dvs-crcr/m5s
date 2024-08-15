@@ -8,8 +8,8 @@ END$$;
 CREATE TABLE IF NOT EXISTS metrics.metrics(
     id VARCHAR(255) PRIMARY KEY NOT NULL,
     metric_type metric_type NOT NULL,
-    delta BIGINT default NULL,
-    value DOUBLE PRECISION default NULL
+    delta BIGINT default 0,
+    value DOUBLE PRECISION default 0
 );
 
 ---- create above / drop below ----

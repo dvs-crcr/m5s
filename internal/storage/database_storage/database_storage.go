@@ -7,15 +7,18 @@ import (
     "os"
     "strconv"
 
+    "github.com/jackc/pgx/v5"
     "github.com/jackc/pgx/v5/pgxpool"
 
     "github.com/jackc/tern/v2/migrate"
 
     "m5s/domain"
+    "m5s/pkg/logger"
 )
 
 type DBStorage struct {
     pool           *pgxpool.Pool
+    logger         logger.Logger
     migrationsPath string
 }
 
@@ -23,12 +26,14 @@ var SchemaVersionTable = "schema_version"
 
 func NewDBStorage(
     ctx context.Context,
+    logger logger.Logger,
     dsn string,
     migrationsPath string,
-    migrationsSchemaVersion int32,
+    migrationsSchemaVersion string,
 ) (*DBStorage, error) {
     dbStorage := &DBStorage{
         migrationsPath: migrationsPath,
+        logger:         logger,
     }
 
     poolConfig, err := pgxpool.ParseConfig(dsn)
@@ -46,7 +51,7 @@ func NewDBStorage(
     if err := dbStorage.startMigrations(
         ctx,
         SchemaVersionTable,
-        migrationsSchemaVersion,
+        parseMigrationVersion(migrationsSchemaVersion),
     ); err != nil {
         return nil, err
     }
@@ -91,7 +96,7 @@ func (ids *DBStorage) startMigrations(
     return nil
 }
 
-func ParseMigrationVersion(migrationsVersion string) int32 {
+func parseMigrationVersion(migrationsVersion string) int32 {
     if migrationsVersion == "" {
         return 0
     }
@@ -108,51 +113,105 @@ func (ids *DBStorage) Ping(ctx context.Context) error {
     return ids.pool.Ping(ctx)
 }
 
-func (ids *DBStorage) Update(ctx context.Context, metric *domain.Metric) error {
-    //TODO implement me
-    panic("implement me 1")
-}
-
 func (ids *DBStorage) GetMetric(ctx context.Context, metricType domain.MetricType, name string) (*domain.Metric, error) {
-    //TODO implement me
-    panic("implement me 2")
-}
+    metric := &domain.Metric{}
 
-func (ids *DBStorage) GetMetricsList(ctx context.Context) ([]*domain.Metric, error) {
-    fmt.Println("CCCCCCCCCCCCCCCCCCCCCCCCCCCCCCC")
-
-    metrics := make([]*domain.Metric, 0)
-
-    rows, err := ids.pool.Query(
-        ctx,
-        `SELECT
+    query := `
+        SELECT
             id,
             metric_type,
             delta,
             value
-        FROM metrics.metrics;`)
+        FROM metrics.metrics
+        WHERE
+            id=$1
+            AND metric_type=$2;
+    `
+
+    row := ids.pool.QueryRow(ctx, query, name, metricType.String())
+
+    if err := row.Scan(
+        &metric.Name, &metric.Type, &metric.IntValue, &metric.FloatValue,
+    ); err != nil {
+        ids.logger.Error("get metric from db", "error", err)
+        return nil, err
+    }
+
+    return metric, nil
+}
+
+func (ids *DBStorage) GetMetricsList(ctx context.Context) ([]*domain.Metric, error) {
+    metrics := make([]*domain.Metric, 0)
+
+    query := `
+        SELECT
+            id,
+            metric_type,
+            delta,
+            value
+        FROM metrics.metrics;
+    `
+
+    rows, err := ids.pool.Query(ctx, query)
     if err != nil {
         return nil, err
     }
 
     for rows.Next() {
-        var row *domain.Metric
+        var row domain.Metric
 
         if err := rows.Scan(
-            &row.Name, &row.Type, &row.FloatValue, &row.IntValue,
+            &row.Name, &row.Type, &row.IntValue, &row.FloatValue,
         ); err != nil {
             return nil, err
         }
 
-        metrics = append(metrics, row)
+        metrics = append(metrics, &row)
     }
-
-    fmt.Println("AAAAAAAAAAAAAAAAAAAA", metrics)
 
     return metrics, err
 }
 
+func (ids *DBStorage) Update(ctx context.Context, metric *domain.Metric) error {
+    query := `
+        INSERT INTO metrics.metrics(id, metric_type, delta, value)
+        VALUES($1, $2, $3, $4)
+        ON CONFLICT (id) DO UPDATE SET
+            delta = metrics.delta + $3,
+            value = $4;
+    `
+
+    if _, err := ids.pool.Exec(
+        ctx,
+        query,
+        metric.Name, metric.Type.String(), metric.IntValue, metric.FloatValue,
+    ); err != nil {
+        return err
+    }
+
+    return nil
+}
+
 func (ids *DBStorage) UpdateMetrics(ctx context.Context, metrics []*domain.Metric) error {
-    //TODO implement me
-    panic("implement me 4")
+    batch := &pgx.Batch{}
+
+    query := `
+        INSERT INTO metrics.metrics(id, metric_type, delta, value)
+        VALUES($1, $2, $3, $4)
+        ON CONFLICT (id) DO UPDATE SET
+            delta = metrics.delta + $3,
+            value = $4;
+    `
+
+    for _, metric := range metrics {
+        batch.Queue(query, metric.Name, metric.Type.String(), metric.IntValue, metric.FloatValue, )
+    }
+
+    br := ids.pool.SendBatch(ctx, batch)
+
+    if _, err := br.Exec(); err != nil {
+        return err
+    }
+
+    return nil
 }

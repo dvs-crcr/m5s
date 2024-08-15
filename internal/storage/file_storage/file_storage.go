@@ -11,6 +11,7 @@ import (
 
     "m5s/domain"
     memoryStorage "m5s/internal/storage/memory_storage"
+    "m5s/pkg/logger"
 )
 
 type FileStorage struct {
@@ -18,16 +19,19 @@ type FileStorage struct {
     fileStoragePath string
     storeInterval   time.Duration
     restore         bool
+    logger          logger.Logger
 }
 
 func NewFileStorage(
     ctx context.Context,
+    logger logger.Logger,
     fileStoragePath string,
     storeInterval time.Duration,
     restore bool,
 ) (*FileStorage, error) {
     ifs := &FileStorage{
-        cache:           memoryStorage.NewMemStorage(),
+        cache:           memoryStorage.NewMemStorage(logger),
+        logger:          logger,
         fileStoragePath: fileStoragePath,
         storeInterval:   storeInterval,
         restore:         restore,

@@ -3,12 +3,8 @@ package server
 import (
     "context"
     "errors"
-    "time"
 
     "m5s/domain"
-    "m5s/internal/storage/database_storage"
-    fileStorage "m5s/internal/storage/file_storage"
-    memoryStorage "m5s/internal/storage/memory_storage"
     "m5s/pkg/logger"
 )
 
@@ -33,8 +29,10 @@ var (
     )
 )
 
-func NewServerService(options ...Option) *Service {
-    service := &Service{}
+func NewServerService(storage Storage, options ...Option) *Service {
+    service := &Service{
+        storage: storage,
+    }
 
     for _, opt := range options {
         opt(service)
@@ -47,55 +45,6 @@ func WithLogger(logger logger.Logger) Option {
     return func(service *Service) {
         service.logger = logger
     }
-}
-
-func WithStorage(
-    ctx context.Context,
-    restore bool,
-    fileStoragePath string,
-    storeInterval time.Duration,
-    dsn string,
-    migrationsPath string,
-    migrationsVersion string,
-) Option {
-    return func(service *Service) {
-        var err error
-
-        switch {
-        case dsn != "":
-            service.storage, err = databaseStorage.NewDBStorage(
-                ctx,
-                dsn,
-                migrationsPath,
-                databaseStorage.ParseMigrationVersion(migrationsVersion),
-            )
-            if err != nil {
-                service.logger.Fatal(
-                    "unable to create new db storage instance",
-                    "error", err,
-                )
-            }
-        case fileStoragePath != "":
-            service.storage, err = fileStorage.NewFileStorage(
-                ctx,
-                fileStoragePath,
-                storeInterval,
-                restore,
-            )
-            if err != nil {
-                service.logger.Fatal(
-                    "unable to create new file storage instance",
-                    "error", err,
-                )
-            }
-        default:
-            service.storage = memoryStorage.NewMemStorage()
-        }
-    }
-}
-
-func (ss *Service) ChangeStorage(storage Storage) {
-    ss.storage = storage
 }
 
 func (ss *Service) Update(

@@ -6,16 +6,19 @@ import (
     "sync"
 
     "m5s/domain"
+    "m5s/pkg/logger"
 )
 
 type MemStorage struct {
     sync.RWMutex
-    store map[string]*domain.Metric
+    store  map[string]*domain.Metric
+    logger logger.Logger
 }
 
-func NewMemStorage() *MemStorage {
+func NewMemStorage(logger logger.Logger) *MemStorage {
     return &MemStorage{
-        store: make(map[string]*domain.Metric),
+        store:  make(map[string]*domain.Metric),
+        logger: logger,
     }
 }
 
@@ -23,22 +26,22 @@ func (ims *MemStorage) Update(_ context.Context, metric *domain.Metric) error {
     ims.Lock()
     defer ims.Unlock()
 
-    //if metric.Type == domain.MetricTypeCounter {
-    //    newValue := metric.IntValue
-    //
-    //    prevMetric, ok := ims.store[metric.Name]
-    //    if ok {
-    //        newValue += prevMetric.IntValue
-    //
-    //        metric.IntValue = newValue
-    //
-    //        ims.store[metric.Name] = metric
-    //
-    //        return nil
-    //    }
-    //}
-    //
-    //ims.store[metric.Name] = metric
+    if metric.Type == domain.MetricTypeCounter {
+        newValue := metric.IntValue
+
+        prevMetric, ok := ims.store[metric.Name]
+        if ok {
+            newValue += prevMetric.IntValue
+
+            metric.IntValue = newValue
+
+            ims.store[metric.Name] = metric
+
+            return nil
+        }
+    }
+
+    ims.store[metric.Name] = metric
 
     return nil
 }

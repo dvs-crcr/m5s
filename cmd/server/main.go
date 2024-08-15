@@ -2,6 +2,7 @@ package main
 
 import (
     "context"
+    "fmt"
     "log"
     "net/http"
     "time"
@@ -11,6 +12,9 @@ import (
     "m5s/internal/api/handlers"
     "m5s/internal/api/middleware"
     "m5s/internal/server"
+    databaseStorage "m5s/internal/storage/database_storage"
+    fileStorage "m5s/internal/storage/file_storage"
+    memoryStorage "m5s/internal/storage/memory_storage"
     internalLogger "m5s/pkg/logger"
     "m5s/pkg/logger/providers"
 )
@@ -36,17 +40,17 @@ func execute(cfg *Config) error {
         internalLogger.WithLogLevel(cfg.LogLevel),
     )
 
+    serverStorage, err := selectServerStorage(ctx, logger, cfg)
+    if err != nil {
+        logger.Fatal(
+            "select server storage",
+            "error", err,
+        )
+    }
+
     serverService := server.NewServerService(
+        serverStorage,
         server.WithLogger(logger),
-        server.WithStorage(
-            ctx,
-            cfg.Restore,
-            cfg.FileStoragePath,
-            time.Duration(cfg.StoreInterval)*time.Second,
-            cfg.DatabaseDSN,
-            cfg.MigrationsPath,
-            cfg.MigrationsVersion,
-        ),
     )
 
     apiHandler := handlers.NewHandler(
@@ -57,12 +61,9 @@ func execute(cfg *Config) error {
     apiMiddleware := middleware.NewMiddleware(logger)
 
     r := chi.NewRouter()
-
-    // Middlewares
     r.Use(apiMiddleware.WithRequestLogger)
     r.Use(middleware.WithCompression)
 
-    // Routes
     r.Route("/", func(r chi.Router) {
         r.Get("/", apiHandler.GetMetricsList)
 
@@ -84,4 +85,45 @@ func execute(cfg *Config) error {
         "config", cfg,
     )
     return http.ListenAndServe(cfg.Addr, r)
+}
+
+func selectServerStorage(ctx context.Context, logger internalLogger.Logger, cfg *Config) (server.Storage, error) {
+    var serverStorage server.Storage
+
+    switch {
+    case cfg.DatabaseDSN != "":
+        var err error
+
+        serverStorage, err = databaseStorage.NewDBStorage(
+            ctx,
+            logger,
+            cfg.DatabaseDSN,
+            cfg.MigrationsPath,
+            cfg.MigrationsVersion,
+        )
+        if err != nil {
+            return nil, fmt.Errorf(
+                "unable to create new db storage instance: %w", err,
+            )
+        }
+    case cfg.FileStoragePath != "":
+        var err error
+
+        serverStorage, err = fileStorage.NewFileStorage(
+            ctx,
+            logger,
+            cfg.FileStoragePath,
+            time.Duration(cfg.StoreInterval)*time.Second,
+            cfg.Restore,
+        )
+        if err != nil {
+            return nil, fmt.Errorf(
+                "unable to create new file storage instance: %w", err,
+            )
+        }
+    default:
+        serverStorage = memoryStorage.NewMemStorage(logger)
+    }
+
+    return serverStorage, nil
 }

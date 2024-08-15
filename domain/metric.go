@@ -1,6 +1,7 @@
 package domain
 
 import (
+    "database/sql/driver"
     "errors"
     "fmt"
     "strconv"
@@ -41,6 +42,31 @@ func ParseMetricType(strMetricType string) (MetricType, error) {
     default:
         return MetricTypeUnknown, ErrInvalidMetricType
     }
+}
+
+func (mt *MetricType) Scan(value any) error {
+    if value == nil {
+        return nil
+    }
+
+    sv, err := driver.String.ConvertValue(value)
+    if err != nil {
+        return fmt.Errorf("cannot scan value. %w", err)
+    }
+
+    v, ok := sv.(string)
+    if !ok {
+        return errors.New("cannot scan value. cannot convert value to string")
+    }
+
+    metricType, err := ParseMetricType(v)
+    if err != nil {
+        return errors.New("cannot parse string to MetricType")
+    }
+
+    *mt = metricType
+
+    return nil
 }
 
 // NewMetric uses to create new Metric instance.

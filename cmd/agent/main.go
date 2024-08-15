@@ -38,7 +38,7 @@ func execute(cfg *Config) {
         "config", cfg,
     )
 
-    agentStorage := memoryStorage.NewMemStorage()
+    agentStorage := memoryStorage.NewMemStorage(logger)
 
     agentService := agent.NewAgentService(
         agentStorage,
