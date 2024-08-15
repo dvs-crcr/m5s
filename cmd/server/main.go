@@ -69,6 +69,8 @@ func execute(cfg *Config) error {
 
         r.Get("/ping", apiHandler.Ping)
 
+        r.Post("/updates/", apiHandler.UpdateBatch)
+
         r.Route("/update", func(r chi.Router) {
             r.Post("/", apiHandler.UpdateJSON)
             r.Post("/{metricType}/{metricName}/{metricValue}", apiHandler.Update)

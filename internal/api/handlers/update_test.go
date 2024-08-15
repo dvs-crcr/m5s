@@ -13,10 +13,13 @@ import (
 
     "m5s/internal/server"
     memoryStorage "m5s/internal/storage/memory_storage"
+    internalLogger "m5s/pkg/logger"
 )
 
 func TestHandler_Update(t *testing.T) {
-    serverStorage := memoryStorage.NewMemStorage()
+    logger := internalLogger.NewLogger()
+
+    serverStorage := memoryStorage.NewMemStorage(logger)
     serverService := server.NewServerService(serverStorage)
 
     handler := NewHandler(
@@ -119,7 +122,9 @@ func TestHandler_Update(t *testing.T) {
 }
 
 func TestHandler_UpdateJSON(t *testing.T) {
-    serverStorage := memoryStorage.NewMemStorage()
+    logger := internalLogger.NewLogger()
+
+    serverStorage := memoryStorage.NewMemStorage(logger)
     serverService := server.NewServerService(serverStorage)
 
     handler := NewHandler(

@@ -69,3 +69,8 @@ func (h *Handler) UpdateJSON(w http.ResponseWriter, r *http.Request) {
 
     w.WriteHeader(http.StatusOK)
 }
+
+func (h *Handler) UpdateBatch(w http.ResponseWriter, r *http.Request) {
+    // TODO:
+    panic("implement me")
+}
