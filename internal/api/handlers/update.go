@@ -71,6 +71,37 @@ func (h *Handler) UpdateJSON(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *Handler) UpdateBatch(w http.ResponseWriter, r *http.Request) {
-    // TODO:
-    panic("implement me")
+    ctx := r.Context()
+
+    if !api.CheckContentType(
+        r.Header.Get("Content-Type"),
+        "application/json",
+    ) {
+        api.HandleErrors(api.ErrInvalidJSONContentType, w)
+
+        return
+    }
+
+    metrics := make([]*models.Metrics, 0)
+
+    bodyData, err := io.ReadAll(r.Body)
+    if err != nil {
+        h.logger.Error("read JSON body", "error", err.Error())
+
+        return
+    }
+
+    if err := json.Unmarshal(bodyData, &metrics); err != nil {
+        api.HandleErrors(api.ErrInvalidJSONStruct, w)
+
+        return
+    }
+
+    if err := h.serverService.UpdateBatch(ctx, metrics); err != nil {
+        api.HandleErrors(err, w)
+
+        return
+    }
+    
+    w.WriteHeader(http.StatusOK)
 }

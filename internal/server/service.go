@@ -5,6 +5,7 @@ import (
     "errors"
 
     "m5s/domain"
+    "m5s/internal/models"
     "m5s/pkg/logger"
 )
 
@@ -119,4 +120,23 @@ func (ss *Service) GetMetricsList(ctx context.Context) string {
 
 func (ss *Service) PingDB(ctx context.Context) error {
     return ss.storage.Ping(ctx)
+}
+
+func (ss *Service) UpdateBatch(
+    ctx context.Context,
+    metrics []*models.Metrics,
+) error {
+    domainMetrics := make([]*domain.Metric, 0, len(metrics))
+
+    for _, metric := range metrics {
+        m, _ := domain.NewMetric(metric.MType, metric.ID, metric.String())
+
+        domainMetrics = append(domainMetrics, m)
+    }
+
+    if err := ss.storage.UpdateMetrics(ctx, domainMetrics); err != nil {
+        return err
+    }
+
+    return nil
 }
