@@ -105,8 +105,6 @@ func NewMetric(
 }
 
 func NewGauge(name string, value float64) *Metric {
-    logger.Debugw("new gauge", "name", name, "value", value)
-
     return &Metric{
         Name:       name,
         Type:       MetricTypeGauge,
@@ -116,8 +114,6 @@ func NewGauge(name string, value float64) *Metric {
 }
 
 func NewCounter(name string, value int64) *Metric {
-    logger.Debugw("new counter", "name", name, "value", value)
-
     return &Metric{
         Name:       name,
         Type:       MetricTypeCounter,
