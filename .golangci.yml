@@ -26,7 +26,7 @@ linters:
     - errname
     - errorlint
     - exhaustive
-    - exportloopref
+    - copyloopvar
     - fatcontext
     - forbidigo
     - forcetypeassert
