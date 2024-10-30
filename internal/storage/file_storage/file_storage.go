@@ -14,7 +14,7 @@ import (
     internalLogger "m5s/pkg/logger"
 )
 
-var logger = internalLogger.GetLogger()
+var logger = internalLogger.NewLogger()
 
 type FileStorage struct {
     cache           *memorystorage.MemStorage
@@ -33,7 +33,7 @@ func NewFileStorage(
         "package", "storage",
         "type", "file",
     )
-    logger.Info("init new file storage instance")
+    logger.Info("init storage")
 
     ifs := &FileStorage{
         cache:           memorystorage.NewMemStorage(),

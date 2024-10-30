@@ -9,7 +9,7 @@ import (
     internalLogger "m5s/pkg/logger"
 )
 
-var logger = internalLogger.GetLogger()
+var logger = internalLogger.NewLogger()
 
 type Storage interface {
     Update(ctx context.Context, metric *domain.Metric) error
@@ -42,7 +42,7 @@ func NewAgentService(storage Storage, options ...Option) *Service {
     }
 
     logger.Infow(
-        "init new agent service",
+        "init agent service",
         "config", fmt.Sprintf("%+v", service.config),
     )
 

@@ -2,7 +2,7 @@ package middleware
 
 import internalLogger "m5s/pkg/logger"
 
-var logger = internalLogger.GetLogger()
+var logger = internalLogger.NewLogger()
 
 type Middleware struct {
 }

@@ -20,7 +20,7 @@ func (as *Service) StartPollTicker(ctx context.Context) {
     for range ticker.C {
         currentValues := getCurrentValues()
 
-        metrics := make([]*domain.Metric, 0, len(currentValues))
+        metrics := make([]*domain.Metric, 0, len(currentValues)+1)
 
         for name, value := range currentValues {
             metrics = append(metrics, domain.NewGauge(name, value))

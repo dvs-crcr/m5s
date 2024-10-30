@@ -9,7 +9,7 @@ import (
     internalLogger "m5s/pkg/logger"
 )
 
-var logger = internalLogger.GetLogger()
+var logger = internalLogger.NewLogger()
 
 var (
     ErrInvalidMetricType  = errors.New("invalid metric type")

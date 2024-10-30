@@ -16,7 +16,7 @@ import (
     internalLogger "m5s/pkg/logger"
 )
 
-var logger = internalLogger.GetLogger()
+var logger = internalLogger.NewLogger()
 
 type DBStorage struct {
     pool           *pgxpool.Pool
@@ -35,7 +35,7 @@ func NewDBStorage(
         "package", "storage",
         "type", "db",
     )
-    logger.Info("init new db storage instance")
+    logger.Info("init storage")
 
     dbStorage := &DBStorage{
         migrationsPath: migrationsPath,

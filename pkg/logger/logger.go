@@ -8,42 +8,45 @@ type Logger struct {
     zap.SugaredLogger
 }
 
-var instance Logger
-var globalLogLevel LogLevel = ERROR
+var isInit bool
+var instance *Logger
+var level zap.AtomicLevel
+var globalLogLevel LogLevel = INFO
 
-// NewLogger init new logger instance with LogLevel and appName
-func NewLogger(appName string, logLevelStr string) (*Logger, error) {
-    var err error
-
-    zapLogger, err := zap.NewDevelopment()
-    if err != nil {
-        panic(err)
+// NewLogger init new logger instance or return existed
+func NewLogger() *Logger {
+    if isInit {
+        return instance
     }
+
+    level = zap.NewAtomicLevel()
+    level.UnmarshalText([]byte(globalLogLevel.String()))
+
+    encoderConfig := zap.NewProductionEncoderConfig()
+
+    zapConfig := zap.NewProductionConfig()
+    zapConfig.Development = true
+    zapConfig.EncoderConfig = encoderConfig
+    zapConfig.Level = level
+    zapConfig.Encoding = "console" // "json"
+    zapConfig.OutputPaths = []string{"stdout"}
+    zapConfig.ErrorOutputPaths = []string{"stderr"}
+
+    zapLogger, _ := zapConfig.Build()
     defer zapLogger.Sync()
 
-    zapSugarLogger := *zapLogger.Sugar()
-
-    zapSugarLogger = *zapSugarLogger.With("cmd", appName)
-
-    if err := SetLogLevel(logLevelStr); err != nil {
-        return nil, err
+    instance = &Logger{
+        *zapLogger.Sugar(),
     }
 
-    zapLevel := zapSugarLogger.Level()
-    zapLevel.Set(globalLogLevel.String())
+    isInit = true
 
-    instance = Logger{
-        zapSugarLogger,
-    }
+    instance.Infow("init logger", "log_level", instance.SugaredLogger.Level().String())
 
-    return &instance, nil
+    return instance
 }
 
-// GetLogger uses to get Logger instance
-func GetLogger() *Logger {
-    return &instance
-}
-
+// With wrapper
 func (l *Logger) With(args ...interface{}) *Logger {
     return &Logger{
         *instance.SugaredLogger.With(args...),
@@ -55,6 +58,12 @@ func SetLogLevel(logLevelStr string) error {
     var err error
 
     if globalLogLevel, err = parseLogLevel(logLevelStr); err != nil {
+        return err
+    }
+
+    instance.Infow("change log level", "log_level", globalLogLevel)
+
+    if err = level.UnmarshalText([]byte(globalLogLevel.String())); err != nil {
         return err
     }
 

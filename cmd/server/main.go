@@ -2,20 +2,31 @@ package main
 
 import (
     "context"
+    "fmt"
     "log"
     "net/http"
+    "time"
 
     "github.com/go-chi/chi/v5"
 
     "m5s/internal/api/handlers"
     "m5s/internal/api/middleware"
     "m5s/internal/server"
+    databasestorage "m5s/internal/storage/database_storage"
+    filestorage "m5s/internal/storage/file_storage"
+    memorystorage "m5s/internal/storage/memory_storage"
     internalLogger "m5s/pkg/logger"
 )
+
+var logger = internalLogger.NewLogger()
 
 func main() {
     config := NewDefaultConfig()
     if err := config.parseVariables(); err != nil {
+        log.Fatal(err)
+    }
+
+    if err := internalLogger.SetLogLevel(config.LogLevel); err != nil {
         log.Fatal(err)
     }
 
@@ -27,27 +38,18 @@ func main() {
 func execute(cfg *Config) error {
     ctx := context.Background()
 
-    logger, err := internalLogger.NewLogger("server", cfg.LogLevel)
-    if err != nil {
-        return err
-    }
-
     logger.Infow(
         "starting server",
         "config", cfg,
     )
 
+    serverStorage, err := selectServerStorage(ctx, cfg)
+    if err != nil {
+        logger.Fatal(err.Error())
+    }
+
     serverService := server.NewServerService(
-        ctx,
-        &server.Config{
-            Addr:              cfg.Addr,
-            StoreInterval:     cfg.StoreInterval,
-            FileStoragePath:   cfg.FileStoragePath,
-            MigrationsPath:    cfg.MigrationsPath,
-            MigrationsVersion: cfg.MigrationsVersion,
-            DatabaseDSN:       cfg.DatabaseDSN,
-            Restore:           cfg.Restore,
-        },
+        serverStorage,
     )
 
     apiHandler := handlers.NewHandler(
@@ -79,4 +81,43 @@ func execute(cfg *Config) error {
     })
 
     return http.ListenAndServe(cfg.Addr, r)
+}
+
+func selectServerStorage(ctx context.Context, cfg *Config) (server.Storage, error) {
+    var serverStorage server.Storage
+
+    switch {
+    case cfg.DatabaseDSN != "":
+        var err error
+
+        serverStorage, err = databasestorage.NewDBStorage(
+            ctx,
+            cfg.DatabaseDSN,
+            cfg.MigrationsPath,
+            cfg.MigrationsVersion,
+        )
+        if err != nil {
+            return nil, fmt.Errorf(
+                "unable to create new db storage instance: %w", err,
+            )
+        }
+    case cfg.FileStoragePath != "":
+        var err error
+
+        serverStorage, err = filestorage.NewFileStorage(
+            ctx,
+            cfg.FileStoragePath,
+            time.Duration(cfg.StoreInterval)*time.Second,
+            cfg.Restore,
+        )
+        if err != nil {
+            return nil, fmt.Errorf(
+                "unable to create new file storage instance: %w", err,
+            )
+        }
+    default:
+        serverStorage = memorystorage.NewMemStorage()
+    }
+
+    return serverStorage, nil
 }

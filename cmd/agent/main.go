@@ -13,9 +13,15 @@ import (
     internalLogger "m5s/pkg/logger"
 )
 
+var logger = internalLogger.NewLogger()
+
 func main() {
     config := NewDefaultConfig()
     if err := config.parseVariables(); err != nil {
+        log.Fatal(err)
+    }
+
+    if err := internalLogger.SetLogLevel(config.LogLevel); err != nil {
         log.Fatal(err)
     }
 
@@ -24,11 +30,6 @@ func main() {
 
 func execute(cfg *Config) {
     ctx := context.Background()
-
-    logger, err := internalLogger.NewLogger("agent", cfg.LogLevel)
-    if err != nil {
-        log.Fatal(err)
-    }
 
     logger.Infow(
         "starting agent",

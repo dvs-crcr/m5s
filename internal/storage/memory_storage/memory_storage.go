@@ -9,7 +9,7 @@ import (
     internalLogger "m5s/pkg/logger"
 )
 
-var logger = internalLogger.GetLogger()
+var logger = internalLogger.NewLogger()
 
 type MemStorage struct {
     sync.RWMutex
@@ -21,7 +21,7 @@ func NewMemStorage() *MemStorage {
         "package", "storage",
         "type", "memory",
     )
-    logger.Info("init new memory storage instance")
+    logger.Info("init storage")
 
     return &MemStorage{
         store: make(map[string]*domain.Metric),
