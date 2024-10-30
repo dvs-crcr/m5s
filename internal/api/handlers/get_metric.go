@@ -8,20 +8,21 @@ import (
     "m5s/internal/api"
 )
 
-func (h *Handler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *Handler) GetMetric(w http.ResponseWriter, r *http.Request) {
     ctx := r.Context()
 
     w.Header().Set("Content-Type", "text/plain")
 
     metricType := chi.URLParam(r, "metricType")
     metricName := chi.URLParam(r, "metricName")
-    metricValue := chi.URLParam(r, "metricValue")
 
-    if err := h.serverService.Update(ctx, metricType, metricName, metricValue); err != nil {
+    metricValue, err := h.serverService.GetMetricValue(ctx, metricType, metricName)
+    if err != nil {
         api.HandleErrors(err, w)
 
         return
     }
 
     w.WriteHeader(http.StatusOK)
+    w.Write([]byte(metricValue))
 }

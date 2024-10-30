@@ -6,19 +6,25 @@ import (
     "sync"
 
     "m5s/domain"
-    "m5s/pkg/logger"
+    internalLogger "m5s/pkg/logger"
 )
+
+var logger = internalLogger.GetLogger()
 
 type MemStorage struct {
     sync.RWMutex
-    store  map[string]*domain.Metric
-    logger logger.Logger
+    store map[string]*domain.Metric
 }
 
-func NewMemStorage(logger logger.Logger) *MemStorage {
+func NewMemStorage() *MemStorage {
+    logger = logger.With(
+        "package", "storage",
+        "type", "memory",
+    )
+    logger.Info("init new memory storage instance")
+
     return &MemStorage{
-        store:  make(map[string]*domain.Metric),
-        logger: logger,
+        store: make(map[string]*domain.Metric),
     }
 }
 
@@ -47,6 +53,8 @@ func (ims *MemStorage) Update(_ context.Context, metric *domain.Metric) error {
 }
 
 func (ims *MemStorage) UpdateMetrics(ctx context.Context, metrics []*domain.Metric) error {
+    logger.Debugw("update metrics", "metrics", fmt.Sprintf("%v", metrics))
+
     for _, metric := range metrics {
         if err := ims.Update(ctx, metric); err != nil {
             return fmt.Errorf("unable to restore metric: %v: %w", metric, err)

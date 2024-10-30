@@ -2,11 +2,14 @@ package agent
 
 import (
     "context"
+    "fmt"
     "time"
 
     "m5s/domain"
-    "m5s/pkg/logger"
+    internalLogger "m5s/pkg/logger"
 )
+
+var logger = internalLogger.GetLogger()
 
 type Storage interface {
     Update(ctx context.Context, metric *domain.Metric) error
@@ -22,13 +25,14 @@ type Config struct {
 
 type Service struct {
     storage Storage
-    logger  logger.Logger
     config  Config
 }
 
 type Option func(*Service)
 
 func NewAgentService(storage Storage, options ...Option) *Service {
+    logger = logger.With("package", "agent")
+
     service := &Service{
         storage: storage,
     }
@@ -37,13 +41,12 @@ func NewAgentService(storage Storage, options ...Option) *Service {
         opt(service)
     }
 
-    return service
-}
+    logger.Infow(
+        "init new agent service",
+        "config", fmt.Sprintf("%+v", service.config),
+    )
 
-func WithLogger(logger logger.Logger) Option {
-    return func(service *Service) {
-        service.logger = logger
-    }
+    return service
 }
 
 func WithAddress(serverAddr string) Option {

@@ -43,7 +43,7 @@ func (m *Middleware) WithRequestLogger(next http.Handler) http.Handler {
             responseData:   rd,
         }
 
-        m.logger.Info(
+        logger.Info(
             "request",
             "method", r.Method,
             "uri", r.RequestURI,
@@ -54,7 +54,7 @@ func (m *Middleware) WithRequestLogger(next http.Handler) http.Handler {
 
         next.ServeHTTP(&lw, r)
 
-        m.logger.Info(
+        logger.Info(
             "response",
             "status", rd.status,
             "duration", time.Since(start),

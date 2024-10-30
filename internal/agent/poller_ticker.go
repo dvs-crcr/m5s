@@ -10,7 +10,7 @@ import (
 )
 
 func (as *Service) StartPollTicker(ctx context.Context) {
-    as.logger.Info(
+    logger.Infow(
         "starting poll ticker",
         "pollInterval", as.config.pollInterval,
     )
@@ -29,7 +29,7 @@ func (as *Service) StartPollTicker(ctx context.Context) {
         metrics = append(metrics, domain.NewCounter("PollCount", 1))
 
         if err := as.storage.UpdateMetrics(ctx, metrics); err != nil {
-            as.logger.Error("update agent metrics", "error", err)
+            logger.Errorw(err.Error())
         }
     }
 }

@@ -22,6 +22,7 @@ func (ll LogLevel) String() string {
     return [...]string{"fatal", "error", "warn", "info", "debug"}[ll]
 }
 
+// parseLogLevel uses to parse log level from string
 func parseLogLevel(strLevel string) (LogLevel, error) {
     switch strLevel {
     case "fatal", "FATAL":

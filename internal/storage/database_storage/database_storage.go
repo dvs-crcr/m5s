@@ -13,12 +13,13 @@ import (
     "github.com/jackc/tern/v2/migrate"
 
     "m5s/domain"
-    "m5s/pkg/logger"
+    internalLogger "m5s/pkg/logger"
 )
+
+var logger = internalLogger.GetLogger()
 
 type DBStorage struct {
     pool           *pgxpool.Pool
-    logger         logger.Logger
     migrationsPath string
 }
 
@@ -26,14 +27,18 @@ var SchemaVersionTable = "schema_version"
 
 func NewDBStorage(
     ctx context.Context,
-    logger logger.Logger,
     dsn string,
     migrationsPath string,
     migrationsSchemaVersion string,
 ) (*DBStorage, error) {
+    logger = logger.With(
+        "package", "storage",
+        "type", "db",
+    )
+    logger.Info("init new db storage instance")
+
     dbStorage := &DBStorage{
         migrationsPath: migrationsPath,
-        logger:         logger,
     }
 
     poolConfig, err := pgxpool.ParseConfig(dsn)
@@ -133,7 +138,7 @@ func (ids *DBStorage) GetMetric(ctx context.Context, metricType domain.MetricTyp
     if err := row.Scan(
         &metric.Name, &metric.Type, &metric.IntValue, &metric.FloatValue,
     ); err != nil {
-        ids.logger.Error("get metric from db", "error", err)
+        logger.Errorw(err.Error())
         return nil, err
     }
 
@@ -193,6 +198,8 @@ func (ids *DBStorage) Update(ctx context.Context, metric *domain.Metric) error {
 }
 
 func (ids *DBStorage) UpdateMetrics(ctx context.Context, metrics []*domain.Metric) error {
+    logger.Debugw("update metrics", "metrics", fmt.Sprintf("%v", metrics))
+
     batch := &pgx.Batch{}
 
     query := `

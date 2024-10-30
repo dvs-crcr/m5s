@@ -2,17 +2,22 @@ package handlers
 
 import (
     "m5s/internal/server"
-    "m5s/pkg/logger"
+    internalLogger "m5s/pkg/logger"
 )
+
+var logger = internalLogger.GetLogger()
 
 type Handler struct {
     serverService *server.Service
-    logger        logger.Logger
 }
 
 type Option func(handler *Handler)
 
 func NewHandler(serverService *server.Service, options ...Option) *Handler {
+    logger = logger.With(
+        "package", "handlers",
+    )
+
     handler := &Handler{
         serverService: serverService,
     }
@@ -22,10 +27,4 @@ func NewHandler(serverService *server.Service, options ...Option) *Handler {
     }
 
     return handler
-}
-
-func WithLogger(logger logger.Logger) Option {
-    return func(handler *Handler) {
-        handler.logger = logger
-    }
 }

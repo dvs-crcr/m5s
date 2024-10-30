@@ -27,6 +27,7 @@ type Config struct {
     Restore           bool
 }
 
+// NewDefaultConfig returns default Config struct
 func NewDefaultConfig() *Config {
     return &Config{
         LogLevel:          DefaultLogLevel,
@@ -40,6 +41,7 @@ func NewDefaultConfig() *Config {
     }
 }
 
+// parseVariables uses to parse cli flags and environment variables
 func (c *Config) parseVariables() error {
     var err error
 

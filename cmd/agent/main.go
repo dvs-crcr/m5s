@@ -10,9 +10,7 @@ import (
 
     "m5s/internal/agent"
     memorystorage "m5s/internal/storage/memory_storage"
-
     internalLogger "m5s/pkg/logger"
-    "m5s/pkg/logger/providers"
 )
 
 func main() {
@@ -27,22 +25,20 @@ func main() {
 func execute(cfg *Config) {
     ctx := context.Background()
 
-    loggerProvider := providers.NewZapProvider()
-    logger := internalLogger.NewLogger(
-        internalLogger.WithProvider(loggerProvider),
-        internalLogger.WithLogLevel(cfg.LogLevel),
-    )
+    logger, err := internalLogger.NewLogger("agent", cfg.LogLevel)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-    logger.Info(
+    logger.Infow(
         "starting agent",
         "config", cfg,
     )
 
-    agentStorage := memorystorage.NewMemStorage(logger)
+    agentStorage := memorystorage.NewMemStorage()
 
     agentService := agent.NewAgentService(
         agentStorage,
-        agent.WithLogger(logger),
         agent.WithAddress(cfg.Addr),
         agent.WithPollInterval(time.Duration(cfg.PollInterval)*time.Second),
         agent.WithReportInterval(time.Duration(cfg.ReportInterval)*time.Second),

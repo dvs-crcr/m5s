@@ -21,7 +21,7 @@ func (as *Service) StartReportTicker(ctx context.Context) {
         },
     }
 
-    as.logger.Info(
+    logger.Infow(
         "starting report ticker",
         "reportInterval", as.config.reportInterval,
     )
@@ -31,7 +31,7 @@ func (as *Service) StartReportTicker(ctx context.Context) {
     for range ticker.C {
         metricsList, err := as.storage.GetMetricsList(ctx)
         if err != nil {
-            as.logger.Error("get metrics list", "error", err)
+            logger.Errorw(err.Error())
         }
 
         for _, metric := range metricsList {
@@ -40,7 +40,7 @@ func (as *Service) StartReportTicker(ctx context.Context) {
                 fmt.Sprintf("http://%s/update/", as.config.serverAddr),
                 metric,
             ); err != nil {
-                as.logger.Error("reporter request", "error", err)
+                logger.Errorw(err.Error())
             }
         }
     }
@@ -85,11 +85,28 @@ func makeRequest(
     request.Header.Set("Content-Type", "application/json")
     request.Header.Set("Content-Encoding", "gzip")
 
+    logger.Debugw(
+        "prepare update request",
+        "url", request.URL,
+        "method", request.Method,
+        "ip", request.RemoteAddr,
+        "size", request.ContentLength,
+        "headers", request.Header,
+        "payload", string(bytesMetric),
+    )
+
     response, err := client.Do(request)
     if err != nil {
         return err
     }
     defer response.Body.Close()
+
+    logger.Debugw(
+        "update response",
+        "status", response.Status,
+        "size", response.ContentLength,
+        "headers", response.Header,
+    )
 
     return nil
 }

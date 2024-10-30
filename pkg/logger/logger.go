@@ -1,53 +1,62 @@
 package logger
 
 import (
-    "log"
+    "go.uber.org/zap"
 )
 
-type Logger interface {
-    Fatal(msg string, keysAndValues ...interface{})
-    Error(msg string, keysAndValues ...interface{})
-    Warn(msg string, keysAndValues ...interface{})
-    Info(msg string, keysAndValues ...interface{})
-    Debug(msg string, keysAndValues ...interface{})
-    SetLogLevel(level LogLevel)
+type Logger struct {
+    zap.SugaredLogger
 }
 
-type InternalLogger struct {
-    logLevel LogLevel
-    provider Logger
+var instance Logger
+var globalLogLevel LogLevel = ERROR
+
+// NewLogger init new logger instance with LogLevel and appName
+func NewLogger(appName string, logLevelStr string) (*Logger, error) {
+    var err error
+
+    zapLogger, err := zap.NewDevelopment()
+    if err != nil {
+        panic(err)
+    }
+    defer zapLogger.Sync()
+
+    zapSugarLogger := *zapLogger.Sugar()
+
+    zapSugarLogger = *zapSugarLogger.With("cmd", appName)
+
+    if err := SetLogLevel(logLevelStr); err != nil {
+        return nil, err
+    }
+
+    zapLevel := zapSugarLogger.Level()
+    zapLevel.Set(globalLogLevel.String())
+
+    instance = Logger{
+        zapSugarLogger,
+    }
+
+    return &instance, nil
 }
 
-type Option func(*InternalLogger)
-
-func NewLogger(options ...Option) Logger {
-    l := &InternalLogger{
-        provider: NewDefaultProvider(),
-    }
-
-    for _, opt := range options {
-        opt(l)
-    }
-
-    return l.provider
+// GetLogger uses to get Logger instance
+func GetLogger() *Logger {
+    return &instance
 }
 
-func WithProvider(loggerProvider Logger) Option {
-    return func(l *InternalLogger) {
-        l.provider = loggerProvider
-        l.provider.SetLogLevel(l.logLevel)
+func (l *Logger) With(args ...interface{}) *Logger {
+    return &Logger{
+        *instance.SugaredLogger.With(args...),
     }
 }
 
-func WithLogLevel(logLevel string) Option {
-    return func(l *InternalLogger) {
-        var err error
+// SetLogLevel uses to define log level
+func SetLogLevel(logLevelStr string) error {
+    var err error
 
-        l.logLevel, err = parseLogLevel(logLevel)
-        if err != nil {
-            log.Println(err)
-        }
-
-        l.provider.SetLogLevel(l.logLevel)
+    if globalLogLevel, err = parseLogLevel(logLevelStr); err != nil {
+        return err
     }
+
+    return nil
 }

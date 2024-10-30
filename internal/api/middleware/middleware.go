@@ -1,15 +1,16 @@
 package middleware
 
-import (
-    "m5s/pkg/logger"
-)
+import internalLogger "m5s/pkg/logger"
+
+var logger = internalLogger.GetLogger()
 
 type Middleware struct {
-    logger logger.Logger
 }
 
-func NewMiddleware(loggerInstance logger.Logger) *Middleware {
-    return &Middleware{
-        logger: loggerInstance,
-    }
+func NewMiddleware() *Middleware {
+    logger = logger.With(
+        "package", "middleware",
+    )
+
+    return &Middleware{}
 }

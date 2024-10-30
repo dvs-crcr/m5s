@@ -3,11 +3,28 @@ package server
 import (
     "context"
     "errors"
+    "fmt"
+    "time"
 
     "m5s/domain"
     "m5s/internal/models"
-    "m5s/pkg/logger"
+    databasestorage "m5s/internal/storage/database_storage"
+    filestorage "m5s/internal/storage/file_storage"
+    memorystorage "m5s/internal/storage/memory_storage"
+    internalLogger "m5s/pkg/logger"
 )
+
+var logger = internalLogger.GetLogger()
+
+type Config struct {
+    Addr              string
+    StoreInterval     int64
+    FileStoragePath   string
+    MigrationsPath    string
+    MigrationsVersion string
+    DatabaseDSN       string
+    Restore           bool
+}
 
 type Storage interface {
     Update(ctx context.Context, metric *domain.Metric) error
@@ -19,7 +36,6 @@ type Storage interface {
 
 type Service struct {
     storage Storage
-    logger  logger.Logger
 }
 
 type Option func(*Service)
@@ -30,22 +46,67 @@ var (
     )
 )
 
-func NewServerService(storage Storage, options ...Option) *Service {
-    service := &Service{
-        storage: storage,
+func NewServerService(
+    ctx context.Context,
+    cfg *Config,
+) *Service {
+    logger = logger.With(
+        "package", "server",
+    )
+
+    serverStorage, err := selectServerStorage(ctx, cfg)
+    if err != nil {
+        logger.Fatal(err.Error())
     }
 
-    for _, opt := range options {
-        opt(service)
+    service := &Service{
+        storage: serverStorage,
     }
+
+    logger.Infow(
+        "init new server service",
+    )
 
     return service
 }
 
-func WithLogger(logger logger.Logger) Option {
-    return func(service *Service) {
-        service.logger = logger
+func selectServerStorage(ctx context.Context, cfg *Config) (Storage, error) {
+    var serverStorage Storage
+
+    switch {
+    case cfg.DatabaseDSN != "":
+        var err error
+
+        serverStorage, err = databasestorage.NewDBStorage(
+            ctx,
+            cfg.DatabaseDSN,
+            cfg.MigrationsPath,
+            cfg.MigrationsVersion,
+        )
+        if err != nil {
+            return nil, fmt.Errorf(
+                "unable to create new db storage instance: %w", err,
+            )
+        }
+    case cfg.FileStoragePath != "":
+        var err error
+
+        serverStorage, err = filestorage.NewFileStorage(
+            ctx,
+            cfg.FileStoragePath,
+            time.Duration(cfg.StoreInterval)*time.Second,
+            cfg.Restore,
+        )
+        if err != nil {
+            return nil, fmt.Errorf(
+                "unable to create new file storage instance: %w", err,
+            )
+        }
+    default:
+        serverStorage = memorystorage.NewMemStorage()
     }
+
+    return serverStorage, nil
 }
 
 func (ss *Service) Update(
@@ -107,7 +168,7 @@ func (ss *Service) GetMetricsList(ctx context.Context) string {
 
     metricsList, err := ss.storage.GetMetricsList(ctx)
     if err != nil {
-        ss.logger.Error("get metrics list from cache", "error", err)
+        logger.Errorw(err.Error())
         return ""
     }
 

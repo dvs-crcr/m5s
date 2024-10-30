@@ -11,27 +11,32 @@ import (
 
     "m5s/domain"
     memorystorage "m5s/internal/storage/memory_storage"
-    "m5s/pkg/logger"
+    internalLogger "m5s/pkg/logger"
 )
+
+var logger = internalLogger.GetLogger()
 
 type FileStorage struct {
     cache           *memorystorage.MemStorage
     fileStoragePath string
     storeInterval   time.Duration
     restore         bool
-    logger          logger.Logger
 }
 
 func NewFileStorage(
     ctx context.Context,
-    logger logger.Logger,
     fileStoragePath string,
     storeInterval time.Duration,
     restore bool,
 ) (*FileStorage, error) {
+    logger = logger.With(
+        "package", "storage",
+        "type", "file",
+    )
+    logger.Info("init new file storage instance")
+
     ifs := &FileStorage{
-        cache:           memorystorage.NewMemStorage(logger),
-        logger:          logger,
+        cache:           memorystorage.NewMemStorage(),
         fileStoragePath: fileStoragePath,
         storeInterval:   storeInterval,
         restore:         restore,
@@ -57,6 +62,8 @@ func (ifs *FileStorage) _(ctx context.Context, metrics []*domain.Metric) error {
 
 // UpdateMetrics uses to store metrics
 func (ifs *FileStorage) UpdateMetrics(ctx context.Context, metrics []*domain.Metric) error {
+    logger.Debugw("update metrics", "metrics", fmt.Sprintf("%v", metrics))
+
     if err := ifs.cache.UpdateMetrics(ctx, metrics); err != nil {
         return err
     }

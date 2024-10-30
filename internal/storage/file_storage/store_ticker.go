@@ -11,7 +11,7 @@ func (ifs *FileStorage) startStoreTicker(ctx context.Context) {
         return
     }
 
-    ifs.logger.Info(
+    logger.Info(
         "starting store ticker",
         "storeInterval", ifs.storeInterval,
     )
@@ -20,7 +20,7 @@ func (ifs *FileStorage) startStoreTicker(ctx context.Context) {
 
     for range ticker.C {
         if err := ifs.backupMetrics(ctx); err != nil {
-            ifs.logger.Error(
+            logger.Error(
                 "backup metrics",
                 "error", err,
             )
