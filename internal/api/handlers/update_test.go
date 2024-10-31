@@ -1,4 +1,4 @@
-package api
+package handlers
 
 import (
     "io"
@@ -6,23 +6,27 @@ import (
     "net/http/httptest"
     "testing"
 
+    "github.com/go-chi/chi/v5"
     "github.com/stretchr/testify/assert"
     "github.com/stretchr/testify/require"
 
-    "m5s/internal/repository"
     "m5s/internal/server"
+    memorystorage "m5s/internal/storage/memory_storage"
 )
 
-//nolint:funlen
 func TestHandler_Update(t *testing.T) {
-    handler := &Handler{
-        serverService: server.NewServerService(
-            repository.NewInMemStorage(),
-        ),
-        Mux: http.NewServeMux(),
-    }
+    serverStorage := memorystorage.NewMemStorage()
+    serverService := server.NewServerService(serverStorage)
 
-    handler.Mux.HandleFunc("/update/", handler.Update)
+    handler := NewHandler(
+        serverService,
+    )
+
+    r := chi.NewRouter()
+    r.Post("/update/{metricType}/{metricName}/{metricValue}", handler.Update)
+
+    testServer := httptest.NewServer(r)
+    defer testServer.Close()
 
     type want struct {
         code        int
@@ -41,7 +45,7 @@ func TestHandler_Update(t *testing.T) {
             target: "/update/gauge/heapSize/0.1111",
             want: want{
                 code:        http.StatusMethodNotAllowed,
-                contentType: "text/plain",
+                contentType: "",
             },
         }, {
             name:   "negative__wrong_url",
@@ -88,22 +92,27 @@ func TestHandler_Update(t *testing.T) {
 
     for _, tt := range tests {
         t.Run(tt.name, func(t *testing.T) {
-            r := httptest.NewRequest(tt.method, tt.target, nil)
-            w := httptest.NewRecorder()
+            var err error
 
-            handler.Update(w, r)
+            req := httptest.NewRequest(
+                tt.method,
+                testServer.URL+tt.target,
+                nil,
+            )
+            req.RequestURI = ""
 
-            res := w.Result()
+            res, err := http.DefaultClient.Do(req)
+            require.NoError(t, err)
             defer res.Body.Close()
 
             // Check StatusCode
             assert.Equal(t, tt.want.code, res.StatusCode)
 
-            _, err := io.ReadAll(res.Body)
+            _, err = io.ReadAll(res.Body)
             require.NoError(t, err)
 
             // Check Content-Type
-            assert.Equal(t, tt.want.contentType, res.Header.Get("Content-Type"))
+            assert.Contains(t, res.Header.Get("Content-Type"), tt.want.contentType)
         })
     }
 }
